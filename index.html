@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Ocularium</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #000;
+        overflow: hidden;
+        font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+        color: #e8e6e0;
+      }
+      canvas {
+        display: block;
+        width: 100vw;
+        height: 100vh;
+      }
+      /* Burned-in recorder overlay. Real units stamp this after the lens, so it is not distorted. */
+      #stamp {
+        position: fixed;
+        top: 3.2vh;
+        right: 3.4vw;
+        text-align: right;
+        font-size: clamp(11px, 1.55vh, 20px);
+        line-height: 1.35;
+        letter-spacing: 0.04em;
+        color: #f4f4f4;
+        text-shadow:
+          1px 1px 0 #000,
+          -1px -1px 0 rgba(0, 0, 0, 0.6);
+        pointer-events: none;
+        user-select: none;
+        white-space: pre;
+        opacity: 0.92;
+        display: none;
+      }
+      #veil {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 2.2vh;
+        background: #050505;
+        z-index: 10;
+        transition: opacity 0.6s ease;
+      }
+      #veil.paused {
+        background: rgba(5, 5, 5, 0.72);
+      }
+      #veil.hidden {
+        opacity: 0;
+        pointer-events: none;
+      }
+      #veil h1 {
+        margin: 0;
+        font-size: clamp(20px, 3.4vh, 44px);
+        font-weight: 500;
+        letter-spacing: 0.42em;
+        padding-left: 0.42em;
+      }
+      #veil .sub {
+        font-size: clamp(11px, 1.4vh, 16px);
+        letter-spacing: 0.18em;
+        opacity: 0.55;
+      }
+      #bar {
+        width: min(340px, 50vw);
+        height: 2px;
+        background: #222;
+      }
+      #bar > div {
+        height: 100%;
+        width: 0%;
+        background: #d8d4c8;
+        transition: width 0.15s linear;
+      }
+      #prompt {
+        min-height: 1.4em;
+        font-size: clamp(11px, 1.5vh, 17px);
+        letter-spacing: 0.16em;
+      }
+      #keys {
+        font-size: clamp(10px, 1.25vh, 14px);
+        line-height: 1.9;
+        letter-spacing: 0.1em;
+        opacity: 0.5;
+        text-align: center;
+        white-space: pre;
+      }
+      #error {
+        color: #ff8a70;
+        max-width: 70vw;
+        white-space: pre-wrap;
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="view"></canvas>
+    <div id="stamp"></div>
+    <div id="veil">
+      <h1>OCULARIUM</h1>
+      <div class="sub" id="status">LOADING</div>
+      <div id="bar"><div></div></div>
+      <div id="prompt"></div>
+      <div id="keys"></div>
+      <div id="error"></div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

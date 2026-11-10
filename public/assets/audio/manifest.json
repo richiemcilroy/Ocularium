@@ -1,0 +1,2274 @@
+{
+ "foot/dirt": [
+  {
+   "duration": 0.43,
+   "peakDb": -1.52,
+   "rmsDb": -25.61,
+   "file": "foot/dirt/01.mp3",
+   "source": "oga_fantozzi_steps",
+   "onsetMs": 1.7,
+   "attackDb": -12.9
+  },
+  {
+   "duration": 0.392,
+   "peakDb": -1.44,
+   "rmsDb": -26.99,
+   "file": "foot/dirt/02.mp3",
+   "source": "oga_fantozzi_steps",
+   "onsetMs": 1.6,
+   "attackDb": -15.0
+  },
+  {
+   "duration": 0.314,
+   "peakDb": -1.46,
+   "rmsDb": -25.04,
+   "file": "foot/dirt/03.mp3",
+   "source": "oga_fantozzi_steps",
+   "onsetMs": 2.4,
+   "attackDb": -3.5
+  },
+  {
+   "duration": 0.335,
+   "peakDb": -1.56,
+   "rmsDb": -26.96,
+   "file": "foot/dirt/04.mp3",
+   "source": "oga_fantozzi_steps",
+   "onsetMs": 2.6,
+   "attackDb": -16.6
+  },
+  {
+   "duration": 0.296,
+   "peakDb": -1.54,
+   "rmsDb": -26.78,
+   "file": "foot/dirt/05.mp3",
+   "source": "oga_fantozzi_steps",
+   "onsetMs": 1.9,
+   "attackDb": -0.3
+  },
+  {
+   "duration": 0.323,
+   "peakDb": -1.38,
+   "rmsDb": -23.23,
+   "file": "foot/dirt/06.mp3",
+   "source": "oga_fantozzi_steps",
+   "onsetMs": 2.7,
+   "attackDb": -8.4
+  },
+  {
+   "duration": 0.225,
+   "peakDb": -1.51,
+   "rmsDb": -23.44,
+   "file": "foot/dirt/07.mp3",
+   "source": "oga_vehicle_tiny",
+   "onsetMs": 3.0,
+   "attackDb": -3.4
+  },
+  {
+   "duration": 0.16,
+   "peakDb": -1.57,
+   "rmsDb": -21.57,
+   "file": "foot/dirt/08.mp3",
+   "source": "oga_vehicle_tiny",
+   "onsetMs": 1.6,
+   "attackDb": -6.4
+  },
+  {
+   "duration": 0.6,
+   "peakDb": -1.53,
+   "rmsDb": -29.34,
+   "file": "foot/dirt/09.mp3",
+   "source": "oga_tinyworlds_steps",
+   "onsetMs": 6.1,
+   "attackDb": -16.3
+  },
+  {
+   "duration": 0.491,
+   "peakDb": -1.48,
+   "rmsDb": -34.02,
+   "file": "foot/dirt/10.mp3",
+   "source": "oga_vehicle_tiny",
+   "onsetMs": 2.9,
+   "attackDb": -14.0
+  }
+ ],
+ "foot/stone": [
+  {
+   "duration": 0.36,
+   "peakDb": -1.44,
+   "rmsDb": -20.45,
+   "file": "foot/stone/01.mp3",
+   "source": "oga_fantozzi_steps",
+   "onsetMs": 1.5,
+   "attackDb": -0.4
+  },
+  {
+   "duration": 0.35,
+   "peakDb": -1.55,
+   "rmsDb": -22.49,
+   "file": "foot/stone/02.mp3",
+   "source": "oga_fantozzi_steps",
+   "onsetMs": 3.3,
+   "attackDb": -4.3
+  },
+  {
+   "duration": 0.32,
+   "peakDb": -1.5,
+   "rmsDb": -20.94,
+   "file": "foot/stone/03.mp3",
+   "source": "oga_fantozzi_steps",
+   "onsetMs": 2.1,
+   "attackDb": -3.6
+  },
+  {
+   "duration": 0.312,
+   "peakDb": -1.56,
+   "rmsDb": -20.45,
+   "file": "foot/stone/04.mp3",
+   "source": "oga_fantozzi_steps",
+   "onsetMs": 3.3,
+   "attackDb": -3.0
+  },
+  {
+   "duration": 0.328,
+   "peakDb": -1.48,
+   "rmsDb": -19.92,
+   "file": "foot/stone/05.mp3",
+   "source": "oga_fantozzi_steps",
+   "onsetMs": 1.6,
+   "attackDb": -9.8
+  },
+  {
+   "duration": 0.337,
+   "peakDb": -1.57,
+   "rmsDb": -20.85,
+   "file": "foot/stone/06.mp3",
+   "source": "oga_fantozzi_steps",
+   "onsetMs": 2.2,
+   "attackDb": -6.4
+  },
+  {
+   "duration": 0.17,
+   "peakDb": -1.5,
+   "rmsDb": -25.64,
+   "file": "foot/stone/07.mp3",
+   "source": "oga_tinyworlds_steps",
+   "onsetMs": 1.8,
+   "attackDb": -0.0
+  },
+  {
+   "duration": 0.305,
+   "peakDb": -1.52,
+   "rmsDb": -28.23,
+   "file": "foot/stone/08.mp3",
+   "source": "oga_owlish_pack",
+   "onsetMs": 1.6,
+   "attackDb": -5.3
+  },
+  {
+   "duration": 0.295,
+   "peakDb": -1.53,
+   "rmsDb": -27.65,
+   "file": "foot/stone/09.mp3",
+   "source": "oga_owlish_pack",
+   "onsetMs": 1.5,
+   "attackDb": -1.6
+  },
+  {
+   "duration": 0.31,
+   "peakDb": -1.49,
+   "rmsDb": -28.99,
+   "file": "foot/stone/10.mp3",
+   "source": "oga_owlish_pack",
+   "onsetMs": 1.5,
+   "attackDb": -0.7
+  }
+ ],
+ "foot/wood": [
+  {
+   "duration": 0.18,
+   "peakDb": -1.51,
+   "rmsDb": -18.54,
+   "file": "foot/wood/01.mp3",
+   "source": "oga_vehicle_weapons",
+   "onsetMs": 1.6,
+   "attackDb": -0.1
+  },
+  {
+   "duration": 0.33,
+   "peakDb": -1.49,
+   "rmsDb": -22.86,
+   "file": "foot/wood/02.mp3",
+   "source": "oga_vehicle_weapons",
+   "onsetMs": 1.9,
+   "attackDb": -0.3
+  },
+  {
+   "duration": 0.175,
+   "peakDb": -1.47,
+   "rmsDb": -19.2,
+   "file": "foot/wood/03.mp3",
+   "source": "oga_vehicle_weapons",
+   "onsetMs": 1.6,
+   "attackDb": -0.0
+  },
+  {
+   "duration": 0.235,
+   "peakDb": -1.47,
+   "rmsDb": -19.31,
+   "file": "foot/wood/04.mp3",
+   "source": "oga_vehicle_weapons",
+   "onsetMs": 2.5,
+   "attackDb": -1.0
+  },
+  {
+   "duration": 0.226,
+   "peakDb": -1.51,
+   "rmsDb": -22.76,
+   "file": "foot/wood/05.mp3",
+   "source": "oga_tinyworlds_steps",
+   "onsetMs": 1.6,
+   "attackDb": -0.6
+  },
+  {
+   "duration": 0.207,
+   "peakDb": -1.52,
+   "rmsDb": -19.66,
+   "file": "foot/wood/06.mp3",
+   "source": "oga_tinyworlds_steps",
+   "onsetMs": 2.2,
+   "attackDb": -0.4
+  },
+  {
+   "duration": 0.294,
+   "peakDb": -1.46,
+   "rmsDb": -20.68,
+   "file": "foot/wood/07.mp3",
+   "source": "oga_tinyworlds_steps",
+   "onsetMs": 1.5,
+   "attackDb": -0.3
+  },
+  {
+   "duration": 0.2,
+   "peakDb": -1.51,
+   "rmsDb": -15.65,
+   "file": "foot/wood/08.mp3",
+   "source": "oga_rubberduck_100_2",
+   "onsetMs": 3.0,
+   "attackDb": -17.0
+  },
+  {
+   "duration": 0.205,
+   "peakDb": -1.57,
+   "rmsDb": -15.65,
+   "file": "foot/wood/09.mp3",
+   "source": "oga_rubberduck_100_2",
+   "onsetMs": 2.2,
+   "attackDb": -8.2
+  },
+  {
+   "duration": 0.11,
+   "peakDb": -1.48,
+   "rmsDb": -22.52,
+   "file": "foot/wood/10.mp3",
+   "source": "oga_rubberduck_100_2",
+   "onsetMs": 5.4,
+   "attackDb": -0.1
+  }
+ ],
+ "foot/grass": [
+  {
+   "duration": 0.414,
+   "peakDb": -1.56,
+   "rmsDb": -20.68,
+   "file": "foot/grass/01.mp3",
+   "source": "oga_owlish_pack",
+   "onsetMs": 9.1,
+   "attackDb": -25.9
+  },
+  {
+   "duration": 0.325,
+   "peakDb": -1.42,
+   "rmsDb": -23.41,
+   "file": "foot/grass/02.mp3",
+   "source": "oga_owlish_pack",
+   "onsetMs": 6.1,
+   "attackDb": -25.1
+  },
+  {
+   "duration": 0.493,
+   "peakDb": -1.49,
+   "rmsDb": -20.67,
+   "file": "foot/grass/03.mp3",
+   "source": "oga_owlish_pack",
+   "onsetMs": 19.1,
+   "attackDb": -31.6
+  },
+  {
+   "duration": 0.57,
+   "peakDb": -1.58,
+   "rmsDb": -20.51,
+   "file": "foot/grass/04.mp3",
+   "source": "oga_owlish_pack",
+   "onsetMs": 27.9,
+   "attackDb": -34.4
+  },
+  {
+   "duration": 0.6,
+   "peakDb": -1.52,
+   "rmsDb": -20.48,
+   "file": "foot/grass/05.mp3",
+   "source": "oga_owlish_pack",
+   "onsetMs": 45.4,
+   "attackDb": -33.5
+  },
+  {
+   "duration": 0.52,
+   "peakDb": -1.57,
+   "rmsDb": -25.18,
+   "file": "foot/grass/06.mp3",
+   "source": "oga_owlish_pack",
+   "onsetMs": 6.1,
+   "attackDb": -25.4
+  },
+  {
+   "duration": 0.514,
+   "peakDb": -1.48,
+   "rmsDb": -20.19,
+   "file": "foot/grass/07.mp3",
+   "source": "oga_owlish_pack",
+   "onsetMs": 3.3,
+   "attackDb": -28.9
+  },
+  {
+   "duration": 0.391,
+   "peakDb": -1.55,
+   "rmsDb": -25.43,
+   "file": "foot/grass/08.mp3",
+   "source": "oga_tinyworlds_steps",
+   "onsetMs": 1.7,
+   "attackDb": -12.9
+  }
+ ],
+ "foot/land": [
+  {
+   "duration": 0.33,
+   "peakDb": -1.47,
+   "rmsDb": -20.82,
+   "file": "foot/land/01.mp3",
+   "source": "oga_vehicle_weapons",
+   "onsetMs": 1.9,
+   "attackDb": -2.9
+  },
+  {
+   "duration": 0.5,
+   "peakDb": -1.5,
+   "rmsDb": -23.47,
+   "file": "foot/land/02.mp3",
+   "source": "oga_vehicle_weapons",
+   "onsetMs": 2.0,
+   "attackDb": -9.7
+  },
+  {
+   "duration": 0.245,
+   "peakDb": -1.47,
+   "rmsDb": -24.5,
+   "file": "foot/land/03.mp3",
+   "source": "oga_vehicle_weapons",
+   "onsetMs": 1.6,
+   "attackDb": -10.4
+  },
+  {
+   "duration": 0.6,
+   "peakDb": -1.53,
+   "rmsDb": -22.86,
+   "file": "foot/land/04.mp3",
+   "source": "oga_owlish_pack",
+   "onsetMs": 6.4,
+   "attackDb": -8.5
+  }
+ ],
+ "gear": [
+  {
+   "duration": 0.695,
+   "peakDb": -1.53,
+   "rmsDb": -19.9,
+   "file": "gear/01.mp3",
+   "source": "oga_vehicle_weapons",
+   "onsetMs": 3.9,
+   "attackDb": -16.3
+  },
+  {
+   "duration": 1.061,
+   "peakDb": -1.49,
+   "rmsDb": -21.15,
+   "file": "gear/02.mp3",
+   "source": "oga_vehicle_weapons",
+   "onsetMs": 8.6,
+   "attackDb": -25.7
+  },
+  {
+   "duration": 0.71,
+   "peakDb": -1.51,
+   "rmsDb": -22.27,
+   "file": "gear/03.mp3",
+   "source": "oga_vehicle_weapons",
+   "onsetMs": 2.0,
+   "attackDb": -13.7
+  },
+  {
+   "duration": 0.43,
+   "peakDb": -1.5,
+   "rmsDb": -22.31,
+   "file": "gear/04.mp3",
+   "source": "oga_artisticdude_rpg",
+   "onsetMs": 2.4,
+   "attackDb": -17.6
+  },
+  {
+   "duration": 0.475,
+   "peakDb": -1.49,
+   "rmsDb": -19.25,
+   "file": "gear/05.mp3",
+   "source": "oga_artisticdude_rpg",
+   "onsetMs": 3.0,
+   "attackDb": -8.3
+  },
+  {
+   "duration": 0.375,
+   "peakDb": -1.59,
+   "rmsDb": -21.64,
+   "file": "gear/06.mp3",
+   "source": "oga_artisticdude_rpg",
+   "onsetMs": 1.9,
+   "attackDb": -12.5
+  },
+  {
+   "duration": 1.23,
+   "peakDb": -1.63,
+   "rmsDb": -20.11,
+   "file": "gear/07.mp3",
+   "source": "oga_dklon_foley",
+   "onsetMs": 0.8,
+   "attackDb": -8.1
+  },
+  {
+   "duration": 0.565,
+   "peakDb": -1.44,
+   "rmsDb": -24.04,
+   "file": "gear/08.mp3",
+   "source": "kenney_rpg",
+   "onsetMs": 1.8,
+   "attackDb": -19.0
+  },
+  {
+   "duration": 0.64,
+   "peakDb": -1.58,
+   "rmsDb": -28.06,
+   "file": "gear/09.mp3",
+   "source": "kenney_rpg",
+   "onsetMs": 2.2,
+   "attackDb": -14.8
+  },
+  {
+   "duration": 0.41,
+   "peakDb": -1.44,
+   "rmsDb": -19.3,
+   "file": "gear/10.mp3",
+   "source": "kenney_rpg",
+   "onsetMs": 1.6,
+   "attackDb": -25.1
+  },
+  {
+   "duration": 0.305,
+   "peakDb": -1.44,
+   "rmsDb": -22.49,
+   "file": "gear/11.mp3",
+   "source": "oga_owlish_202",
+   "onsetMs": 7.2,
+   "attackDb": -16.7
+  },
+  {
+   "duration": 0.43,
+   "peakDb": -1.52,
+   "rmsDb": -22.26,
+   "file": "gear/12.mp3",
+   "source": "oga_owlish_202",
+   "onsetMs": 3.0,
+   "attackDb": -18.0
+  }
+ ],
+ "gear/draw": [
+  {
+   "duration": 1.377,
+   "peakDb": -1.5,
+   "rmsDb": -26.25,
+   "file": "gear/draw/01.mp3",
+   "source": "oga_stillnorth_textures",
+   "onsetMs": 1.5,
+   "attackDb": -15.7
+  },
+  {
+   "duration": 0.51,
+   "peakDb": -1.47,
+   "rmsDb": -20.92,
+   "file": "gear/draw/02.mp3",
+   "source": "oga_stillnorth_textures",
+   "onsetMs": 1.6,
+   "attackDb": -16.3
+  },
+  {
+   "duration": 0.495,
+   "peakDb": -1.5,
+   "rmsDb": -29.83,
+   "file": "gear/draw/03.mp3",
+   "source": "oga_stillnorth_textures",
+   "onsetMs": 3.3,
+   "attackDb": -23.7
+  }
+ ],
+ "gear/sheathe": [
+  {
+   "duration": 1.298,
+   "peakDb": -1.47,
+   "rmsDb": -25.77,
+   "file": "gear/sheathe/01.mp3",
+   "source": "oga_stillnorth_textures",
+   "onsetMs": 3.9,
+   "attackDb": -15.8
+  },
+  {
+   "duration": 1.5,
+   "peakDb": -1.48,
+   "rmsDb": -29.34,
+   "file": "gear/sheathe/02.mp3",
+   "source": "oga_stillnorth_textures",
+   "onsetMs": 1.6,
+   "attackDb": -18.2
+  },
+  {
+   "duration": 1.051,
+   "peakDb": -1.57,
+   "rmsDb": -28.45,
+   "file": "gear/sheathe/03.mp3",
+   "source": "oga_stillnorth_textures",
+   "onsetMs": 1.8,
+   "attackDb": -19.1
+  }
+ ],
+ "sword/swing": [
+  {
+   "duration": 0.16,
+   "peakDb": -1.43,
+   "rmsDb": -16.43,
+   "file": "sword/swing/01.mp3",
+   "source": "oga_qubodup_swosh",
+   "onsetMs": 1.5,
+   "attackDb": -8.0
+  },
+  {
+   "duration": 0.205,
+   "peakDb": -1.54,
+   "rmsDb": -17.08,
+   "file": "sword/swing/02.mp3",
+   "source": "oga_qubodup_swosh",
+   "onsetMs": 1.5,
+   "attackDb": -12.6
+  },
+  {
+   "duration": 0.235,
+   "peakDb": -1.48,
+   "rmsDb": -17.61,
+   "file": "sword/swing/03.mp3",
+   "source": "oga_qubodup_swosh",
+   "onsetMs": 1.5,
+   "attackDb": -15.7
+  },
+  {
+   "duration": 0.29,
+   "peakDb": -1.47,
+   "rmsDb": -16.82,
+   "file": "sword/swing/04.mp3",
+   "source": "oga_qubodup_swosh",
+   "onsetMs": 1.4,
+   "attackDb": -14.0
+  },
+  {
+   "duration": 0.175,
+   "peakDb": -1.49,
+   "rmsDb": -16.9,
+   "file": "sword/swing/05.mp3",
+   "source": "oga_qubodup_swosh",
+   "onsetMs": 1.4,
+   "attackDb": -11.5
+  },
+  {
+   "duration": 0.26,
+   "peakDb": -1.45,
+   "rmsDb": -18.89,
+   "file": "sword/swing/06.mp3",
+   "source": "oga_qubodup_swosh",
+   "onsetMs": 1.4,
+   "attackDb": -5.4
+  },
+  {
+   "duration": 0.175,
+   "peakDb": -1.53,
+   "rmsDb": -15.53,
+   "file": "sword/swing/07.mp3",
+   "source": "oga_qubodup_swosh",
+   "onsetMs": 1.3,
+   "attackDb": -11.6
+  },
+  {
+   "duration": 0.195,
+   "peakDb": -1.58,
+   "rmsDb": -18.12,
+   "file": "sword/swing/08.mp3",
+   "source": "oga_qubodup_swosh",
+   "onsetMs": 1.3,
+   "attackDb": -11.6
+  },
+  {
+   "duration": 0.25,
+   "peakDb": -1.53,
+   "rmsDb": -17.48,
+   "file": "sword/swing/09.mp3",
+   "source": "oga_qubodup_swosh",
+   "onsetMs": 1.3,
+   "attackDb": -12.6
+  },
+  {
+   "duration": 0.18,
+   "peakDb": -1.53,
+   "rmsDb": -18.17,
+   "file": "sword/swing/10.mp3",
+   "source": "oga_qubodup_swosh",
+   "onsetMs": 1.3,
+   "attackDb": -9.4
+  },
+  {
+   "duration": 0.275,
+   "peakDb": -1.51,
+   "rmsDb": -17.68,
+   "file": "sword/swing/11.mp3",
+   "source": "oga_qubodup_swosh",
+   "onsetMs": 1.4,
+   "attackDb": -17.9
+  },
+  {
+   "duration": 0.23,
+   "peakDb": -1.47,
+   "rmsDb": -19.6,
+   "file": "sword/swing/12.mp3",
+   "source": "oga_qubodup_swosh",
+   "onsetMs": 1.4,
+   "attackDb": -18.8
+  }
+ ],
+ "sword/clash": [
+  {
+   "duration": 0.275,
+   "peakDb": -1.46,
+   "rmsDb": -24.58,
+   "file": "sword/clash/01.mp3",
+   "source": "oga_stillnorth_impacts",
+   "onsetMs": 0.4,
+   "attackDb": -0.1
+  },
+  {
+   "duration": 0.26,
+   "peakDb": -1.48,
+   "rmsDb": -25.39,
+   "file": "sword/clash/02.mp3",
+   "source": "oga_stillnorth_impacts",
+   "onsetMs": 0.0,
+   "attackDb": -0.1
+  },
+  {
+   "duration": 0.325,
+   "peakDb": -1.47,
+   "rmsDb": -26.16,
+   "file": "sword/clash/03.mp3",
+   "source": "oga_stillnorth_impacts",
+   "onsetMs": 1.5,
+   "attackDb": -0.1
+  },
+  {
+   "duration": 0.27,
+   "peakDb": -1.54,
+   "rmsDb": -25.51,
+   "file": "sword/clash/04.mp3",
+   "source": "oga_stillnorth_impacts",
+   "onsetMs": 0.0,
+   "attackDb": -0.1
+  },
+  {
+   "duration": 0.48,
+   "peakDb": -1.56,
+   "rmsDb": -31.33,
+   "file": "sword/clash/05.mp3",
+   "source": "oga_stillnorth_impacts",
+   "onsetMs": 1.3,
+   "attackDb": -0.0
+  },
+  {
+   "duration": 0.27,
+   "peakDb": -1.43,
+   "rmsDb": -26.04,
+   "file": "sword/clash/06.mp3",
+   "source": "oga_stillnorth_impacts",
+   "onsetMs": 0.2,
+   "attackDb": -0.1
+  },
+  {
+   "duration": 0.24,
+   "peakDb": -1.72,
+   "rmsDb": -28.02,
+   "file": "sword/clash/07.mp3",
+   "source": "oga_stillnorth_impacts",
+   "onsetMs": 0.2,
+   "attackDb": -0.1
+  },
+  {
+   "duration": 0.255,
+   "peakDb": -1.45,
+   "rmsDb": -24.42,
+   "file": "sword/clash/08.mp3",
+   "source": "oga_stillnorth_impacts",
+   "onsetMs": 0.4,
+   "attackDb": -0.1
+  },
+  {
+   "duration": 0.25,
+   "peakDb": -1.56,
+   "rmsDb": -26.02,
+   "file": "sword/clash/09.mp3",
+   "source": "oga_stillnorth_impacts",
+   "onsetMs": 0.4,
+   "attackDb": -0.0
+  },
+  {
+   "duration": 0.245,
+   "peakDb": -1.45,
+   "rmsDb": -24.56,
+   "file": "sword/clash/10.mp3",
+   "source": "oga_stillnorth_impacts",
+   "onsetMs": 0.5,
+   "attackDb": -0.0
+  },
+  {
+   "duration": 0.24,
+   "peakDb": -1.45,
+   "rmsDb": -25.65,
+   "file": "sword/clash/11.mp3",
+   "source": "oga_stillnorth_impacts",
+   "onsetMs": 0.0,
+   "attackDb": -0.2
+  },
+  {
+   "duration": 0.205,
+   "peakDb": -1.47,
+   "rmsDb": -27.01,
+   "file": "sword/clash/12.mp3",
+   "source": "oga_stillnorth_impacts",
+   "onsetMs": 1.5,
+   "attackDb": -0.1
+  }
+ ],
+ "sword/shield": [
+  {
+   "duration": 0.235,
+   "peakDb": -1.53,
+   "rmsDb": -28.56,
+   "file": "sword/shield/01.mp3",
+   "source": "oga_stillnorth_impacts",
+   "onsetMs": 1.5,
+   "attackDb": -0.1
+  },
+  {
+   "duration": 0.415,
+   "peakDb": -1.57,
+   "rmsDb": -25.87,
+   "file": "sword/shield/02.mp3",
+   "source": "oga_stillnorth_impacts",
+   "onsetMs": 0.1,
+   "attackDb": -0.2
+  },
+  {
+   "duration": 0.275,
+   "peakDb": -1.53,
+   "rmsDb": -25.86,
+   "file": "sword/shield/03.mp3",
+   "source": "oga_stillnorth_impacts",
+   "onsetMs": 1.0,
+   "attackDb": -0.1
+  },
+  {
+   "duration": 0.47,
+   "peakDb": -1.49,
+   "rmsDb": -25.52,
+   "file": "sword/shield/04.mp3",
+   "source": "oga_stillnorth_impacts",
+   "onsetMs": 0.0,
+   "attackDb": -0.4
+  },
+  {
+   "duration": 0.245,
+   "peakDb": -1.49,
+   "rmsDb": -25.77,
+   "file": "sword/shield/05.mp3",
+   "source": "oga_stillnorth_impacts",
+   "onsetMs": 1.5,
+   "attackDb": -0.0
+  },
+  {
+   "duration": 0.255,
+   "peakDb": -1.44,
+   "rmsDb": -26.88,
+   "file": "sword/shield/06.mp3",
+   "source": "oga_stillnorth_impacts",
+   "onsetMs": 1.5,
+   "attackDb": -0.1
+  },
+  {
+   "duration": 0.295,
+   "peakDb": -1.55,
+   "rmsDb": -23.3,
+   "file": "sword/shield/07.mp3",
+   "source": "oga_stillnorth_impacts",
+   "onsetMs": 0.4,
+   "attackDb": -0.1
+  },
+  {
+   "duration": 0.265,
+   "peakDb": -1.52,
+   "rmsDb": -25.79,
+   "file": "sword/shield/08.mp3",
+   "source": "oga_stillnorth_impacts",
+   "onsetMs": 1.5,
+   "attackDb": -0.1
+  }
+ ],
+ "sword/stone": [
+  {
+   "duration": 0.53,
+   "peakDb": -1.56,
+   "rmsDb": -27.84,
+   "file": "sword/stone/01.mp3",
+   "source": "oga_spookymodem_pick",
+   "onsetMs": 0.0,
+   "attackDb": -0.0,
+   "clippedSource": true
+  },
+  {
+   "duration": 0.42,
+   "peakDb": -1.56,
+   "rmsDb": -26.24,
+   "file": "sword/stone/02.mp3",
+   "source": "oga_spookymodem_pick",
+   "onsetMs": 0.0,
+   "attackDb": -0.0,
+   "clippedSource": true
+  },
+  {
+   "duration": 0.215,
+   "peakDb": -1.48,
+   "rmsDb": -18.48,
+   "file": "sword/stone/03.mp3",
+   "source": "oga_bmaczero_metal",
+   "onsetMs": 0.0,
+   "attackDb": -0.1
+  },
+  {
+   "duration": 0.185,
+   "peakDb": -1.53,
+   "rmsDb": -16.66,
+   "file": "sword/stone/04.mp3",
+   "source": "oga_bmaczero_metal",
+   "onsetMs": 0.0,
+   "attackDb": -0.3
+  },
+  {
+   "duration": 0.22,
+   "peakDb": -1.48,
+   "rmsDb": -16.64,
+   "file": "sword/stone/05.mp3",
+   "source": "oga_bmaczero_metal",
+   "onsetMs": 0.4,
+   "attackDb": -0.2
+  }
+ ],
+ "sword/wood": [
+  {
+   "duration": 0.235,
+   "peakDb": -1.48,
+   "rmsDb": -25.32,
+   "file": "sword/wood/01.mp3",
+   "source": "oga_stillnorth_impacts",
+   "onsetMs": 1.0,
+   "attackDb": -0.1
+  },
+  {
+   "duration": 0.32,
+   "peakDb": -1.47,
+   "rmsDb": -26.52,
+   "file": "sword/wood/02.mp3",
+   "source": "oga_stillnorth_impacts",
+   "onsetMs": 1.5,
+   "attackDb": -0.1
+  },
+  {
+   "duration": 0.24,
+   "peakDb": -1.45,
+   "rmsDb": -26.72,
+   "file": "sword/wood/03.mp3",
+   "source": "oga_stillnorth_impacts",
+   "onsetMs": 1.5,
+   "attackDb": -0.2
+  },
+  {
+   "duration": 0.3,
+   "peakDb": -1.51,
+   "rmsDb": -23.97,
+   "file": "sword/wood/04.mp3",
+   "source": "oga_stillnorth_impacts",
+   "onsetMs": 0.6,
+   "attackDb": -0.3
+  },
+  {
+   "duration": 0.295,
+   "peakDb": -1.53,
+   "rmsDb": -24.05,
+   "file": "sword/wood/05.mp3",
+   "source": "oga_stillnorth_impacts",
+   "onsetMs": 1.5,
+   "attackDb": -0.2
+  },
+  {
+   "duration": 0.185,
+   "peakDb": -1.48,
+   "rmsDb": -19.52,
+   "file": "sword/wood/06.mp3",
+   "source": "kenney_rpg",
+   "onsetMs": 3.4,
+   "attackDb": -0.2
+  }
+ ],
+ "sword/flesh": [
+  {
+   "duration": 0.44,
+   "peakDb": -1.43,
+   "rmsDb": -23.36,
+   "file": "sword/flesh/01.mp3",
+   "source": "oga_qubodup_impact",
+   "onsetMs": 2.1,
+   "attackDb": -8.3
+  },
+  {
+   "duration": 0.455,
+   "peakDb": -1.57,
+   "rmsDb": -19.2,
+   "file": "sword/flesh/02.mp3",
+   "source": "oga_qubodup_impact",
+   "onsetMs": 0.1,
+   "attackDb": -1.4
+  },
+  {
+   "duration": 1.2,
+   "peakDb": -1.43,
+   "rmsDb": -32.72,
+   "file": "sword/flesh/03.mp3",
+   "source": "oga_dklon_foley",
+   "onsetMs": 2.3,
+   "attackDb": -10.7
+  },
+  {
+   "duration": 0.906,
+   "peakDb": -1.34,
+   "rmsDb": -27.53,
+   "file": "sword/flesh/04.mp3",
+   "source": "oga_dklon_foley",
+   "onsetMs": 1.6,
+   "attackDb": -1.3
+  },
+  {
+   "duration": 0.415,
+   "peakDb": -1.54,
+   "rmsDb": -18.37,
+   "file": "sword/flesh/05.mp3",
+   "source": "oga_inu_squish",
+   "onsetMs": 1.9,
+   "attackDb": -18.7
+  },
+  {
+   "duration": 0.675,
+   "peakDb": -1.48,
+   "rmsDb": -17.19,
+   "file": "sword/flesh/06.mp3",
+   "source": "oga_inu_squish",
+   "onsetMs": 5.7,
+   "attackDb": -21.9
+  },
+  {
+   "duration": 0.91,
+   "peakDb": -1.49,
+   "rmsDb": -20.02,
+   "file": "sword/flesh/07.mp3",
+   "source": "oga_inu_squish",
+   "onsetMs": 2.1,
+   "attackDb": -1.0
+  },
+  {
+   "duration": 0.505,
+   "peakDb": -1.53,
+   "rmsDb": -22.51,
+   "file": "sword/flesh/08.mp3",
+   "source": "oga_inu_squish",
+   "onsetMs": 2.8,
+   "attackDb": -25.2
+  },
+  {
+   "duration": 0.2,
+   "peakDb": -1.47,
+   "rmsDb": -25.72,
+   "file": "sword/flesh/09.mp3",
+   "source": "oga_vehicle_tiny",
+   "onsetMs": 6.1,
+   "attackDb": -0.5
+  },
+  {
+   "duration": 0.39,
+   "peakDb": -1.42,
+   "rmsDb": -18.58,
+   "file": "sword/flesh/10.mp3",
+   "source": "kenney_rpg",
+   "onsetMs": 1.6,
+   "attackDb": -6.9
+  }
+ ],
+ "sword/drop": [
+  {
+   "duration": 1.41,
+   "peakDb": -1.88,
+   "rmsDb": -22.52,
+   "file": "sword/drop/01.mp3",
+   "source": "oga_rubberduck_metalwood",
+   "onsetMs": 1.8,
+   "attackDb": -13.1
+  },
+  {
+   "duration": 1.315,
+   "peakDb": -1.56,
+   "rmsDb": -23.52,
+   "file": "sword/drop/02.mp3",
+   "source": "oga_bart_workshop",
+   "onsetMs": 2.8,
+   "attackDb": -17.0
+  },
+  {
+   "duration": 0.635,
+   "peakDb": -1.57,
+   "rmsDb": -18.73,
+   "file": "sword/drop/03.mp3",
+   "source": "oga_rubberduck_breaking",
+   "onsetMs": 1.6,
+   "attackDb": -2.7
+  },
+  {
+   "duration": 0.785,
+   "peakDb": -1.55,
+   "rmsDb": -18.52,
+   "file": "sword/drop/04.mp3",
+   "source": "oga_rubberduck_metalwood",
+   "onsetMs": 1.7,
+   "attackDb": -18.9
+  },
+  {
+   "duration": 0.8,
+   "peakDb": -1.52,
+   "rmsDb": -23.65,
+   "file": "sword/drop/05.mp3",
+   "source": "oga_rubberduck_breaking",
+   "onsetMs": 3.1,
+   "attackDb": -25.9
+  }
+ ],
+ "body/fall": [
+  {
+   "duration": 0.38,
+   "peakDb": -1.54,
+   "rmsDb": -17.71,
+   "file": "body/fall/01.mp3",
+   "source": "oga_dklon_foley",
+   "onsetMs": 3.1,
+   "attackDb": -13.5
+  },
+  {
+   "duration": 0.34,
+   "peakDb": -1.49,
+   "rmsDb": -18.24,
+   "file": "body/fall/02.mp3",
+   "source": "oga_dklon_foley",
+   "onsetMs": 3.3,
+   "attackDb": -23.2
+  },
+  {
+   "duration": 0.295,
+   "peakDb": -1.49,
+   "rmsDb": -16.49,
+   "file": "body/fall/03.mp3",
+   "source": "oga_dklon_foley",
+   "onsetMs": 4.1,
+   "attackDb": -1.1
+  },
+  {
+   "duration": 0.255,
+   "peakDb": -1.5,
+   "rmsDb": -20.0,
+   "file": "body/fall/04.mp3",
+   "source": "oga_dklon_foley",
+   "onsetMs": 1.9,
+   "attackDb": -0.4
+  },
+  {
+   "duration": 0.22,
+   "peakDb": -1.44,
+   "rmsDb": -25.75,
+   "file": "body/fall/05.mp3",
+   "source": "oga_dklon_foley",
+   "onsetMs": 1.6,
+   "attackDb": -0.3
+  },
+  {
+   "duration": 0.195,
+   "peakDb": -1.44,
+   "rmsDb": -23.37,
+   "file": "body/fall/06.mp3",
+   "source": "oga_dklon_foley",
+   "onsetMs": 1.7,
+   "attackDb": -0.3
+  }
+ ],
+ "body/hit": [
+  {
+   "duration": 0.31,
+   "peakDb": -1.46,
+   "rmsDb": -25.08,
+   "file": "body/hit/01.mp3",
+   "source": "oga_dklon_foley",
+   "onsetMs": 1.7,
+   "attackDb": -0.1
+  },
+  {
+   "duration": 0.17,
+   "peakDb": -1.56,
+   "rmsDb": -24.34,
+   "file": "body/hit/02.mp3",
+   "source": "oga_dklon_foley",
+   "onsetMs": 1.5,
+   "attackDb": -0.0
+  },
+  {
+   "duration": 0.69,
+   "peakDb": -1.48,
+   "rmsDb": -26.97,
+   "file": "body/hit/03.mp3",
+   "source": "oga_dklon_foley",
+   "onsetMs": 1.9,
+   "attackDb": -0.1
+  },
+  {
+   "duration": 0.566,
+   "peakDb": -1.5,
+   "rmsDb": -28.13,
+   "file": "body/hit/04.mp3",
+   "source": "oga_dklon_foley",
+   "onsetMs": 2.3,
+   "attackDb": -0.1
+  },
+  {
+   "duration": 0.4,
+   "peakDb": -1.49,
+   "rmsDb": -22.5,
+   "file": "body/hit/05.mp3",
+   "source": "oga_qubodup_punch",
+   "onsetMs": 0.0,
+   "attackDb": -0.2
+  },
+  {
+   "duration": 0.415,
+   "peakDb": -1.47,
+   "rmsDb": -21.0,
+   "file": "body/hit/06.mp3",
+   "source": "oga_qubodup_punch",
+   "onsetMs": 1.1,
+   "attackDb": -0.2
+  },
+  {
+   "duration": 0.35,
+   "peakDb": -1.42,
+   "rmsDb": -21.99,
+   "file": "body/hit/07.mp3",
+   "source": "oga_qubodup_punch",
+   "onsetMs": 0.5,
+   "attackDb": -0.0
+  },
+  {
+   "duration": 0.405,
+   "peakDb": -1.52,
+   "rmsDb": -21.35,
+   "file": "body/hit/08.mp3",
+   "source": "oga_qubodup_punch",
+   "onsetMs": 1.5,
+   "attackDb": -0.0
+  }
+ ],
+ "voice/effort": [
+  {
+   "duration": 0.33,
+   "peakDb": -1.6,
+   "rmsDb": -14.77,
+   "file": "voice/effort/01.mp3",
+   "source": "oga_qubodup_strain",
+   "onsetMs": 1.9,
+   "attackDb": -24.6
+  },
+  {
+   "duration": 0.41,
+   "peakDb": -1.55,
+   "rmsDb": -14.63,
+   "file": "voice/effort/02.mp3",
+   "source": "oga_qubodup_strain",
+   "onsetMs": 2.6,
+   "attackDb": -27.7
+  },
+  {
+   "duration": 0.515,
+   "peakDb": -1.51,
+   "rmsDb": -16.83,
+   "file": "voice/effort/03.mp3",
+   "source": "oga_qubodup_strain",
+   "onsetMs": 1.9,
+   "attackDb": -21.0
+  },
+  {
+   "duration": 0.35,
+   "peakDb": -1.46,
+   "rmsDb": -12.85,
+   "file": "voice/effort/04.mp3",
+   "source": "oga_qubodup_strain",
+   "onsetMs": 1.9,
+   "attackDb": -25.0
+  },
+  {
+   "duration": 0.255,
+   "peakDb": -1.57,
+   "rmsDb": -15.19,
+   "file": "voice/effort/05.mp3",
+   "source": "oga_qubodup_strain",
+   "onsetMs": 2.5,
+   "attackDb": -31.8
+  },
+  {
+   "duration": 0.33,
+   "peakDb": -1.53,
+   "rmsDb": -16.17,
+   "file": "voice/effort/06.mp3",
+   "source": "oga_qubodup_strain",
+   "onsetMs": 1.6,
+   "attackDb": -15.5
+  },
+  {
+   "duration": 0.485,
+   "peakDb": -1.47,
+   "rmsDb": -15.08,
+   "file": "voice/effort/07.mp3",
+   "source": "oga_haeldb_yelling",
+   "onsetMs": 3.0,
+   "attackDb": -22.0
+  },
+  {
+   "duration": 0.228,
+   "peakDb": -1.47,
+   "rmsDb": -14.39,
+   "file": "voice/effort/08.mp3",
+   "source": "oga_haeldb_yelling",
+   "onsetMs": 2.5,
+   "attackDb": -15.1
+  },
+  {
+   "duration": 0.35,
+   "peakDb": -1.58,
+   "rmsDb": -16.4,
+   "file": "voice/effort/09.mp3",
+   "source": "oga_haeldb_yelling",
+   "onsetMs": 2.2,
+   "attackDb": -15.1
+  },
+  {
+   "duration": 0.36,
+   "peakDb": -1.47,
+   "rmsDb": -10.76,
+   "file": "voice/effort/10.mp3",
+   "source": "oga_haeldb_yelling",
+   "onsetMs": 1.5,
+   "attackDb": -9.4
+  }
+ ],
+ "voice/pain": [
+  {
+   "duration": 0.5,
+   "peakDb": -1.49,
+   "rmsDb": -17.98,
+   "file": "voice/pain/01.mp3",
+   "source": "oga_baradari_human",
+   "onsetMs": 1.7,
+   "attackDb": -8.9
+  },
+  {
+   "duration": 0.57,
+   "peakDb": -1.48,
+   "rmsDb": -16.74,
+   "file": "voice/pain/02.mp3",
+   "source": "oga_baradari_human",
+   "onsetMs": 1.6,
+   "attackDb": -3.4
+  },
+  {
+   "duration": 0.505,
+   "peakDb": -1.45,
+   "rmsDb": -16.97,
+   "file": "voice/pain/03.mp3",
+   "source": "oga_baradari_human",
+   "onsetMs": 1.6,
+   "attackDb": -3.6
+  },
+  {
+   "duration": 0.635,
+   "peakDb": -1.48,
+   "rmsDb": -15.92,
+   "file": "voice/pain/04.mp3",
+   "source": "oga_baradari_human",
+   "onsetMs": 1.5,
+   "attackDb": -5.5
+  },
+  {
+   "duration": 0.575,
+   "peakDb": -1.49,
+   "rmsDb": -18.07,
+   "file": "voice/pain/05.mp3",
+   "source": "oga_baradari_human",
+   "onsetMs": 1.5,
+   "attackDb": -11.1
+  },
+  {
+   "duration": 0.5,
+   "peakDb": -1.47,
+   "rmsDb": -16.46,
+   "file": "voice/pain/06.mp3",
+   "source": "oga_baradari_human",
+   "onsetMs": 1.5,
+   "attackDb": -9.0
+  },
+  {
+   "duration": 0.48,
+   "peakDb": -1.47,
+   "rmsDb": -12.74,
+   "file": "voice/pain/07.mp3",
+   "source": "oga_bard_deathpain",
+   "onsetMs": 1.5,
+   "attackDb": -19.0
+  },
+  {
+   "duration": 0.86,
+   "peakDb": -1.44,
+   "rmsDb": -14.8,
+   "file": "voice/pain/08.mp3",
+   "source": "oga_bard_deathpain",
+   "onsetMs": 1.5,
+   "attackDb": -20.4
+  },
+  {
+   "duration": 0.84,
+   "peakDb": -1.53,
+   "rmsDb": -17.65,
+   "file": "voice/pain/09.mp3",
+   "source": "oga_bard_deathpain",
+   "onsetMs": 2.0,
+   "attackDb": -9.0
+  },
+  {
+   "duration": 0.9,
+   "peakDb": -1.52,
+   "rmsDb": -17.51,
+   "file": "voice/pain/10.mp3",
+   "source": "oga_bard_deathpain",
+   "onsetMs": 2.0,
+   "attackDb": -19.1
+  }
+ ],
+ "voice/death": [
+  {
+   "duration": 0.845,
+   "peakDb": -1.43,
+   "rmsDb": -17.59,
+   "file": "voice/death/01.mp3",
+   "source": "oga_baradari_human",
+   "onsetMs": 1.5,
+   "attackDb": -8.3
+  },
+  {
+   "duration": 1.0,
+   "peakDb": -1.48,
+   "rmsDb": -17.77,
+   "file": "voice/death/02.mp3",
+   "source": "oga_baradari_human",
+   "onsetMs": 1.6,
+   "attackDb": -7.5
+  },
+  {
+   "duration": 0.57,
+   "peakDb": -1.5,
+   "rmsDb": -16.91,
+   "file": "voice/death/03.mp3",
+   "source": "oga_baradari_human",
+   "onsetMs": 1.5,
+   "attackDb": -4.1
+  },
+  {
+   "duration": 1.46,
+   "peakDb": -1.51,
+   "rmsDb": -12.25,
+   "file": "voice/death/04.mp3",
+   "source": "oga_bard_deathpain",
+   "onsetMs": 1.9,
+   "attackDb": -23.5
+  },
+  {
+   "duration": 2.015,
+   "peakDb": -1.55,
+   "rmsDb": -18.5,
+   "file": "voice/death/05.mp3",
+   "source": "oga_bard_deathpain",
+   "onsetMs": 1.5,
+   "attackDb": -19.6
+  },
+  {
+   "duration": 1.71,
+   "peakDb": -1.51,
+   "rmsDb": -17.97,
+   "file": "voice/death/06.mp3",
+   "source": "oga_bard_deathpain",
+   "onsetMs": 1.7,
+   "attackDb": -21.3
+  }
+ ],
+ "voice/alert": [
+  {
+   "duration": 0.42,
+   "peakDb": -1.46,
+   "rmsDb": -17.78,
+   "file": "voice/alert/01.mp3",
+   "source": "oga_haeldb_yelling",
+   "onsetMs": 1.6,
+   "attackDb": -13.5
+  },
+  {
+   "duration": 0.94,
+   "peakDb": -1.46,
+   "rmsDb": -16.38,
+   "file": "voice/alert/02.mp3",
+   "source": "oga_haeldb_yelling",
+   "onsetMs": 2.8,
+   "attackDb": -21.7
+  },
+  {
+   "duration": 0.375,
+   "peakDb": -1.52,
+   "rmsDb": -14.18,
+   "file": "voice/alert/03.mp3",
+   "source": "oga_haeldb_yelling",
+   "onsetMs": 2.3,
+   "attackDb": -8.0
+  },
+  {
+   "duration": 0.565,
+   "peakDb": -1.56,
+   "rmsDb": -11.36,
+   "file": "voice/alert/04.mp3",
+   "source": "oga_haeldb_yelling",
+   "onsetMs": 1.5,
+   "attackDb": -11.2
+  },
+  {
+   "duration": 0.555,
+   "peakDb": -1.49,
+   "rmsDb": -18.13,
+   "file": "voice/alert/05.mp3",
+   "source": "oga_haeldb_yelling",
+   "onsetMs": 1.6,
+   "attackDb": -14.1
+  }
+ ],
+ "voice/breath/gasp": [
+  {
+   "duration": 1.055,
+   "peakDb": -1.52,
+   "rmsDb": -24.94,
+   "file": "voice/breath/gasp_01.mp3",
+   "source": "oga_owlish_pack",
+   "onsetMs": 3.1,
+   "attackDb": -14.7
+  },
+  {
+   "duration": 0.773,
+   "peakDb": -1.5,
+   "rmsDb": -18.02,
+   "file": "voice/breath/gasp_02.mp3",
+   "source": "oga_owlish_pack",
+   "onsetMs": 2.5,
+   "attackDb": -20.4
+  },
+  {
+   "duration": 1.2,
+   "peakDb": -1.55,
+   "rmsDb": -19.96,
+   "file": "voice/breath/gasp_03.mp3",
+   "source": "oga_owlish_pack",
+   "onsetMs": 2.8,
+   "attackDb": -22.1
+  },
+  {
+   "duration": 0.68,
+   "peakDb": -1.45,
+   "rmsDb": -21.47,
+   "file": "voice/breath/gasp_04.mp3",
+   "source": "oga_owlish_pack",
+   "onsetMs": 2.7,
+   "attackDb": -9.2
+  }
+ ],
+ "amb/horse": [
+  {
+   "duration": 2.165,
+   "peakDb": -1.5,
+   "rmsDb": -17.75,
+   "file": "amb/horse/01.mp3",
+   "source": "commons_wiehern",
+   "onsetMs": 2.6,
+   "attackDb": -28.4
+  }
+ ],
+ "amb/dog": [
+  {
+   "duration": 0.265,
+   "peakDb": -1.52,
+   "rmsDb": -18.1,
+   "file": "amb/dog/01.mp3",
+   "source": "oga_haeldb_dog",
+   "onsetMs": 1.7,
+   "attackDb": -3.2
+  },
+  {
+   "duration": 0.285,
+   "peakDb": -1.49,
+   "rmsDb": -18.87,
+   "file": "amb/dog/02.mp3",
+   "source": "oga_haeldb_dog",
+   "onsetMs": 1.8,
+   "attackDb": -15.1
+  },
+  {
+   "duration": 0.348,
+   "peakDb": -1.5,
+   "rmsDb": -17.47,
+   "file": "amb/dog/03.mp3",
+   "source": "oga_haeldb_dog",
+   "onsetMs": 1.7,
+   "attackDb": -5.7
+  },
+  {
+   "duration": 0.354,
+   "peakDb": -1.46,
+   "rmsDb": -15.41,
+   "file": "amb/dog/04.mp3",
+   "source": "oga_pauliuw_dog",
+   "onsetMs": 6.8,
+   "attackDb": -21.5
+  },
+  {
+   "duration": 0.314,
+   "peakDb": -1.49,
+   "rmsDb": -17.15,
+   "file": "amb/dog/05.mp3",
+   "source": "oga_pauliuw_dog",
+   "onsetMs": 6.8,
+   "attackDb": -19.9
+  }
+ ],
+ "amb/chicken": [
+  {
+   "duration": 1.5,
+   "peakDb": -1.52,
+   "rmsDb": -21.25,
+   "file": "amb/chicken/01.mp3",
+   "source": "commons_chickens_food",
+   "onsetMs": 1.7,
+   "attackDb": -21.7
+  },
+  {
+   "duration": 1.32,
+   "peakDb": -1.57,
+   "rmsDb": -23.78,
+   "file": "amb/chicken/02.mp3",
+   "source": "commons_chickens_food",
+   "onsetMs": 1.6,
+   "attackDb": -20.9
+  },
+  {
+   "duration": 2.815,
+   "peakDb": -1.47,
+   "rmsDb": -21.22,
+   "file": "amb/chicken/03.mp3",
+   "source": "commons_chickens_food",
+   "onsetMs": 0.9,
+   "attackDb": -22.5
+  }
+ ],
+ "amb/rooster": [
+  {
+   "duration": 3.0,
+   "peakDb": -1.53,
+   "rmsDb": -10.23,
+   "file": "amb/rooster/01.mp3",
+   "source": "commons_rooster_medium",
+   "onsetMs": 3.2,
+   "attackDb": -29.2
+  },
+  {
+   "duration": 2.23,
+   "peakDb": -1.57,
+   "rmsDb": -10.73,
+   "file": "amb/rooster/02.mp3",
+   "source": "commons_rooster_small",
+   "onsetMs": 2.3,
+   "attackDb": -29.7
+  }
+ ],
+ "amb/goat": [
+  {
+   "duration": 0.605,
+   "peakDb": -1.46,
+   "rmsDb": -20.83,
+   "file": "amb/goat/01.mp3",
+   "source": "commons_goats",
+   "onsetMs": 1.8,
+   "attackDb": -21.3
+  },
+  {
+   "duration": 0.585,
+   "peakDb": -1.51,
+   "rmsDb": -16.36,
+   "file": "amb/goat/02.mp3",
+   "source": "commons_goats",
+   "onsetMs": 0.7,
+   "attackDb": -12.1
+  }
+ ],
+ "amb/crow": [
+  {
+   "duration": 0.543,
+   "peakDb": -1.54,
+   "rmsDb": -12.41,
+   "file": "amb/crow/01.mp3",
+   "source": "oga_zero_crow",
+   "onsetMs": 2.3,
+   "attackDb": -17.4
+  },
+  {
+   "duration": 0.985,
+   "peakDb": -1.54,
+   "rmsDb": -18.09,
+   "file": "amb/crow/02.mp3",
+   "source": "commons_corvus_cornix",
+   "onsetMs": 2.9,
+   "attackDb": -24.2
+  },
+  {
+   "duration": 0.89,
+   "peakDb": -1.52,
+   "rmsDb": -16.84,
+   "file": "amb/crow/03.mp3",
+   "source": "commons_corvus_cornix",
+   "onsetMs": 2.1,
+   "attackDb": -21.1
+  },
+  {
+   "duration": 1.495,
+   "peakDb": -1.5,
+   "rmsDb": -16.84,
+   "file": "amb/crow/04.mp3",
+   "source": "oga_ignasd_crows",
+   "onsetMs": 0.5,
+   "attackDb": -5.7
+  },
+  {
+   "duration": 1.34,
+   "peakDb": -1.48,
+   "rmsDb": -18.27,
+   "file": "amb/crow/05.mp3",
+   "source": "oga_ignasd_crows",
+   "onsetMs": 1.2,
+   "attackDb": -16.3
+  }
+ ],
+ "door/open": [
+  {
+   "duration": 1.4,
+   "peakDb": -1.45,
+   "rmsDb": -20.03,
+   "file": "door/open/01.mp3",
+   "source": "oga_laleksic_various",
+   "onsetMs": 2.2,
+   "attackDb": -2.0
+  },
+  {
+   "duration": 2.43,
+   "peakDb": -1.46,
+   "rmsDb": -17.66,
+   "file": "door/open/02.mp3",
+   "source": "oga_rubberduck_100",
+   "onsetMs": 3.1,
+   "attackDb": -20.9
+  },
+  {
+   "duration": 3.0,
+   "peakDb": -1.48,
+   "rmsDb": -27.49,
+   "file": "door/open/03.mp3",
+   "source": "oga_forster_door",
+   "onsetMs": 1.7,
+   "attackDb": -2.6
+  },
+  {
+   "duration": 2.37,
+   "peakDb": -1.46,
+   "rmsDb": -17.55,
+   "file": "door/open/04.mp3",
+   "source": "oga_rubberduck_100",
+   "onsetMs": 2.0,
+   "attackDb": -8.4
+  }
+ ],
+ "door/close": [
+  {
+   "duration": 0.34,
+   "peakDb": -1.62,
+   "rmsDb": -22.92,
+   "file": "door/close/01.mp3",
+   "source": "oga_laleksic_various",
+   "onsetMs": 0.2,
+   "attackDb": -0.1
+  },
+  {
+   "duration": 0.26,
+   "peakDb": -1.47,
+   "rmsDb": -18.08,
+   "file": "door/close/02.mp3",
+   "source": "oga_rubberduck_metalwood",
+   "onsetMs": 1.5,
+   "attackDb": -8.4
+  },
+  {
+   "duration": 0.5,
+   "peakDb": -1.45,
+   "rmsDb": -17.58,
+   "file": "door/close/03.mp3",
+   "source": "kenney_rpg",
+   "onsetMs": 1.6,
+   "attackDb": -2.5
+  },
+  {
+   "duration": 0.46,
+   "peakDb": -1.49,
+   "rmsDb": -17.34,
+   "file": "door/close/04.mp3",
+   "source": "kenney_rpg",
+   "onsetMs": 2.1,
+   "attackDb": -25.4
+  }
+ ],
+ "door/gate": [
+  {
+   "duration": 1.305,
+   "peakDb": -1.46,
+   "rmsDb": -25.11,
+   "file": "door/gate/01.mp3",
+   "source": "oga_bart_winch",
+   "onsetMs": 1.5,
+   "attackDb": -14.9
+  },
+  {
+   "duration": 1.77,
+   "peakDb": -1.44,
+   "rmsDb": -25.29,
+   "file": "door/gate/02.mp3",
+   "source": "oga_bart_winch",
+   "onsetMs": 1.6,
+   "attackDb": -10.6
+  },
+  {
+   "duration": 0.42,
+   "peakDb": -1.46,
+   "rmsDb": -18.6,
+   "file": "door/gate/03.mp3",
+   "source": "oga_rubberduck_rpg",
+   "onsetMs": 1.6,
+   "attackDb": -8.0
+  },
+  {
+   "duration": 0.76,
+   "peakDb": -1.47,
+   "rmsDb": -20.19,
+   "file": "door/gate/04.mp3",
+   "source": "oga_rubberduck_rpg",
+   "onsetMs": 1.6,
+   "attackDb": -6.3
+  }
+ ],
+ "prop/wood_knock": [
+  {
+   "duration": 0.538,
+   "peakDb": -1.63,
+   "rmsDb": -19.71,
+   "file": "prop/wood_knock/01.mp3",
+   "source": "oga_bart_workshop",
+   "onsetMs": 2.0,
+   "attackDb": -1.0
+  },
+  {
+   "duration": 0.54,
+   "peakDb": -1.53,
+   "rmsDb": -22.39,
+   "file": "prop/wood_knock/02.mp3",
+   "source": "oga_bart_workshop",
+   "onsetMs": 1.6,
+   "attackDb": -1.2
+  },
+  {
+   "duration": 0.53,
+   "peakDb": -1.54,
+   "rmsDb": -19.17,
+   "file": "prop/wood_knock/03.mp3",
+   "source": "oga_bart_workshop",
+   "onsetMs": 1.6,
+   "attackDb": -1.3
+  },
+  {
+   "duration": 0.49,
+   "peakDb": -1.47,
+   "rmsDb": -20.17,
+   "file": "prop/wood_knock/04.mp3",
+   "source": "oga_bart_workshop",
+   "onsetMs": 1.7,
+   "attackDb": -0.8
+  },
+  {
+   "duration": 0.6,
+   "peakDb": -1.5,
+   "rmsDb": -21.18,
+   "file": "prop/wood_knock/05.mp3",
+   "source": "oga_bart_workshop",
+   "onsetMs": 1.6,
+   "attackDb": -1.5
+  },
+  {
+   "duration": 0.215,
+   "peakDb": -1.46,
+   "rmsDb": -24.51,
+   "file": "prop/wood_knock/06.mp3",
+   "source": "oga_rubberduck_metalwood",
+   "onsetMs": 1.9,
+   "attackDb": -0.1
+  },
+  {
+   "duration": 0.24,
+   "peakDb": -1.54,
+   "rmsDb": -25.53,
+   "file": "prop/wood_knock/07.mp3",
+   "source": "oga_rubberduck_metalwood",
+   "onsetMs": 1.5,
+   "attackDb": -0.1
+  },
+  {
+   "duration": 0.215,
+   "peakDb": -1.49,
+   "rmsDb": -20.41,
+   "file": "prop/wood_knock/08.mp3",
+   "source": "kenney_impact",
+   "onsetMs": 0.3,
+   "attackDb": -0.1
+  }
+ ],
+ "prop/bucket": [
+  {
+   "duration": 0.605,
+   "peakDb": -1.49,
+   "rmsDb": -21.12,
+   "file": "prop/bucket/01.mp3",
+   "source": "oga_vehicle_accessory",
+   "onsetMs": 1.6,
+   "attackDb": -0.6
+  },
+  {
+   "duration": 0.665,
+   "peakDb": -1.51,
+   "rmsDb": -20.19,
+   "file": "prop/bucket/02.mp3",
+   "source": "oga_vehicle_accessory",
+   "onsetMs": 1.6,
+   "attackDb": -4.9
+  },
+  {
+   "duration": 0.67,
+   "peakDb": -1.48,
+   "rmsDb": -20.56,
+   "file": "prop/bucket/03.mp3",
+   "source": "oga_vehicle_accessory",
+   "onsetMs": 1.8,
+   "attackDb": -3.5
+  },
+  {
+   "duration": 0.365,
+   "peakDb": -1.46,
+   "rmsDb": -28.06,
+   "file": "prop/bucket/04.mp3",
+   "source": "oga_vehicle_accessory",
+   "onsetMs": 0.5,
+   "attackDb": -0.0
+  }
+ ],
+ "prop/metal": [
+  {
+   "duration": 0.415,
+   "peakDb": -1.45,
+   "rmsDb": -23.95,
+   "file": "prop/metal/01.mp3",
+   "source": "oga_bart_castiron",
+   "onsetMs": 0.0,
+   "attackDb": -0.0
+  },
+  {
+   "duration": 0.455,
+   "peakDb": -1.5,
+   "rmsDb": -25.62,
+   "file": "prop/metal/02.mp3",
+   "source": "oga_bart_castiron",
+   "onsetMs": 0.1,
+   "attackDb": -0.2
+  },
+  {
+   "duration": 0.645,
+   "peakDb": -1.62,
+   "rmsDb": -23.69,
+   "file": "prop/metal/03.mp3",
+   "source": "oga_bart_castiron",
+   "onsetMs": 0.2,
+   "attackDb": -1.1
+  },
+  {
+   "duration": 0.99,
+   "peakDb": -1.47,
+   "rmsDb": -25.12,
+   "file": "prop/metal/04.mp3",
+   "source": "oga_bart_castiron",
+   "onsetMs": 0.7,
+   "attackDb": -0.2
+  },
+  {
+   "duration": 0.685,
+   "peakDb": -1.55,
+   "rmsDb": -28.45,
+   "file": "prop/metal/05.mp3",
+   "source": "oga_bart_castiron",
+   "onsetMs": 0.4,
+   "attackDb": -0.2
+  },
+  {
+   "duration": 1.14,
+   "peakDb": -1.54,
+   "rmsDb": -25.32,
+   "file": "prop/metal/06.mp3",
+   "source": "oga_vehicle_tiny",
+   "onsetMs": 1.5,
+   "attackDb": -0.3
+  }
+ ],
+ "prop/pottery_break": [
+  {
+   "duration": 0.995,
+   "peakDb": -1.47,
+   "rmsDb": -29.78,
+   "file": "prop/pottery_break/01.mp3",
+   "source": "oga_rubberduck_breaking",
+   "onsetMs": 1.3,
+   "attackDb": -7.1
+  },
+  {
+   "duration": 0.39,
+   "peakDb": -1.51,
+   "rmsDb": -26.72,
+   "file": "prop/pottery_break/02.mp3",
+   "source": "oga_rubberduck_breaking",
+   "onsetMs": 1.9,
+   "attackDb": -0.1
+  },
+  {
+   "duration": 0.41,
+   "peakDb": -1.52,
+   "rmsDb": -21.45,
+   "file": "prop/pottery_break/03.mp3",
+   "source": "oga_rubberduck_breaking",
+   "onsetMs": 1.9,
+   "attackDb": -4.4
+  }
+ ],
+ "prop/wood_break": [
+  {
+   "duration": 0.26,
+   "peakDb": -1.49,
+   "rmsDb": -27.63,
+   "file": "prop/wood_break/01.mp3",
+   "source": "oga_vehicle_tiny",
+   "onsetMs": 1.5,
+   "attackDb": -15.1
+  },
+  {
+   "duration": 0.645,
+   "peakDb": -1.52,
+   "rmsDb": -31.79,
+   "file": "prop/wood_break/02.mp3",
+   "source": "oga_vehicle_tiny",
+   "onsetMs": 1.6,
+   "attackDb": -23.7
+  },
+  {
+   "duration": 0.295,
+   "peakDb": -1.53,
+   "rmsDb": -22.13,
+   "file": "prop/wood_break/03.mp3",
+   "source": "oga_rubberduck_breaking",
+   "onsetMs": 7.5,
+   "attackDb": -17.2
+  },
+  {
+   "duration": 0.16,
+   "peakDb": -1.5,
+   "rmsDb": -29.09,
+   "file": "prop/wood_break/04.mp3",
+   "source": "oga_rubberduck_breaking",
+   "onsetMs": 1.5,
+   "attackDb": -19.7
+  },
+  {
+   "duration": 0.47,
+   "peakDb": -1.44,
+   "rmsDb": -21.88,
+   "file": "prop/wood_break/05.mp3",
+   "source": "oga_rubberduck_metalwood",
+   "onsetMs": 1.5,
+   "attackDb": -0.4
+  }
+ ],
+ "loops": {
+  "amb/wind": {
+   "duration": 40.0,
+   "peakDb": -5.96,
+   "rmsDb": -32.48,
+   "file": "amb/wind.mp3",
+   "source": "oga_thimras_park",
+   "channels": 2,
+   "loop": true,
+   "samples": 1920000,
+   "seamHeadTailDb": -0.86,
+   "seamJump": 0.0042,
+   "lengthDeltaSamples": 0,
+   "crossfade": 1.0
+  },
+  "amb/wind_gusty": {
+   "duration": 30.0,
+   "peakDb": -5.98,
+   "rmsDb": -27.13,
+   "file": "amb/wind_gusty.mp3",
+   "source": "oga_thimras_park",
+   "channels": 2,
+   "loop": true,
+   "samples": 1439985,
+   "seamHeadTailDb": 1.72,
+   "seamJump": 0.00311,
+   "lengthDeltaSamples": 0,
+   "crossfade": 1.0
+  },
+  "amb/birds": {
+   "duration": 32.0,
+   "peakDb": -5.93,
+   "rmsDb": -30.3,
+   "file": "amb/birds.mp3",
+   "source": "commons_birdsong",
+   "channels": 2,
+   "loop": true,
+   "samples": 1536000,
+   "seamHeadTailDb": -0.84,
+   "seamJump": 0.00253,
+   "lengthDeltaSamples": 0,
+   "crossfade": 1.0
+  },
+  "amb/rain": {
+   "duration": 30.0,
+   "peakDb": -6.03,
+   "rmsDb": -27.27,
+   "file": "amb/rain.mp3",
+   "source": "oga_ylmir_rain",
+   "channels": 1,
+   "loop": true,
+   "samples": 1439985,
+   "seamHeadTailDb": -0.62,
+   "seamJump": 0.01204,
+   "lengthDeltaSamples": 0,
+   "crossfade": 1.0
+  },
+  "amb/crows": {
+   "duration": 40.0,
+   "peakDb": -6.06,
+   "rmsDb": -26.47,
+   "file": "amb/crows.mp3",
+   "source": "oga_ignasd_crows",
+   "channels": 1,
+   "loop": true,
+   "samples": 1920000,
+   "seamHeadTailDb": 1.37,
+   "seamJump": 0.0035,
+   "lengthDeltaSamples": 0,
+   "assembled": true,
+   "crossfade": 1.0,
+   "sources": [
+    "commons_corvus_cornix",
+    "oga_ignasd_crows",
+    "oga_thimras_park",
+    "oga_zero_crow"
+   ]
+  },
+  "amb/room_tone": {
+   "duration": 20.0,
+   "peakDb": -5.94,
+   "rmsDb": -18.95,
+   "file": "amb/room_tone.mp3",
+   "source": "oga_dklon_foley",
+   "channels": 1,
+   "loop": true,
+   "samples": 960000,
+   "seamHeadTailDb": 1.78,
+   "seamJump": 0.01471,
+   "lengthDeltaSamples": 0,
+   "assembled": true,
+   "crossfade": 1.0
+  },
+  "fire/torch": {
+   "duration": 20.0,
+   "peakDb": -6.01,
+   "rmsDb": -42.2,
+   "file": "fire/torch.mp3",
+   "source": "commons_grass_fire",
+   "channels": 1,
+   "loop": true,
+   "samples": 960000,
+   "seamHeadTailDb": -0.55,
+   "seamJump": 0.00359,
+   "lengthDeltaSamples": 0,
+   "crossfade": 1.0
+  },
+  "fire/campfire": {
+   "duration": 25.0,
+   "peakDb": -5.94,
+   "rmsDb": -30.85,
+   "file": "fire/campfire.mp3",
+   "source": "oga_pagdev_fire",
+   "channels": 1,
+   "loop": true,
+   "samples": 1200000,
+   "seamHeadTailDb": 0.74,
+   "seamJump": 0.0066,
+   "lengthDeltaSamples": 0,
+   "crossfade": 1.0
+  },
+  "voice/breath/calm": {
+   "duration": 10.015,
+   "peakDb": -6.06,
+   "rmsDb": -27.29,
+   "file": "voice/breath/calm.mp3",
+   "source": "oga_owlish_pack",
+   "channels": 1,
+   "loop": true,
+   "samples": 480699,
+   "seamHeadTailDb": 0.97,
+   "seamJump": 0.00012,
+   "lengthDeltaSamples": 0,
+   "crossfade": 0.03
+  },
+  "voice/breath/heavy": {
+   "duration": 4.189,
+   "peakDb": -6.0,
+   "rmsDb": -27.56,
+   "file": "voice/breath/heavy.mp3",
+   "source": "oga_owlish_pack",
+   "channels": 1,
+   "loop": true,
+   "samples": 201082,
+   "seamHeadTailDb": 4.43,
+   "seamJump": 0.00065,
+   "lengthDeltaSamples": 0,
+   "crossfade": 0.03
+  }
+ },
+ "ir": {
+  "small_room": {
+   "duration": 0.994,
+   "peakDb": -3.0,
+   "rmsDb": -41.96,
+   "file": "ir/small_room.wav",
+   "source": "openair_maes_howe",
+   "channels": 2,
+   "sampleRate": 48000,
+   "bits": 16,
+   "directMs": 0.44,
+   "rt60": 0.5,
+   "lrCorrelation": 0.27
+  },
+  "hall": {
+   "duration": 2.6,
+   "peakDb": -3.0,
+   "rmsDb": -35.61,
+   "file": "ir/hall.wav",
+   "source": "openair_heslington_church",
+   "channels": 2,
+   "sampleRate": 48000,
+   "bits": 16,
+   "directMs": 0.4,
+   "rt60": 1.55,
+   "lrCorrelation": 0.7
+  },
+  "outdoor": {
+   "duration": 1.2,
+   "peakDb": -3.0,
+   "rmsDb": -43.67,
+   "file": "ir/outdoor.wav",
+   "source": "openair_forest",
+   "channels": 2,
+   "sampleRate": 48000,
+   "bits": 16,
+   "directMs": 0.44,
+   "rt60": 0.51,
+   "lrCorrelation": 0.94
+  }
+ }
+}

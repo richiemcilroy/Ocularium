@@ -1,0 +1,7 @@
+node_modules
+dist
+.DS_Store
+*.log
+tools/out
+# Reference stills of the soldier; not needed to run the game.
+public/assets/characters/preview
