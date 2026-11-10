@@ -210,7 +210,12 @@ export class Rig {
 
   static async create(assets: Assets, id = 'characters/soldier'): Promise<Rig> {
     const g = await assets.model(id);
-    return new Rig(cloneSkinned(g.scene));
+    return Rig.from(g.scene);
+  }
+
+  /** Another figure from the same model: its own bones, shared meshes and materials. */
+  static from(source: THREE.Object3D): Rig {
+    return new Rig(cloneSkinned(source));
   }
 
   constructor(model: THREE.Object3D) {

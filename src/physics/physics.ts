@@ -152,6 +152,32 @@ export class Physics {
     return prop;
   }
 
+  /** A free rigid body with a collider of the caller's choosing, carrying `object` with it from where it is now. */
+  addLoose(object: THREE.Object3D, collider: RAPIER.ColliderDesc, surface: SurfaceKind, velocity?: THREE.Vector3, spin?: THREE.Vector3): DynamicProp {
+    const body = this.world.createRigidBody(
+      RAPIER.RigidBodyDesc.dynamic()
+        .setTranslation(object.position.x, object.position.y, object.position.z)
+        .setRotation(object.quaternion)
+        .setLinearDamping(0.05)
+        .setAngularDamping(0.5)
+        .setCcdEnabled(true)
+        .setCanSleep(true),
+    );
+    if (velocity) body.setLinvel(velocity, true);
+    if (spin) body.setAngvel(spin, true);
+    this.tag(this.world.createCollider(collider.setFriction(0.7).setRestitution(0.1).setCollisionGroups(groups(GROUP.PROP, GROUP.WORLD | GROUP.PROP | GROUP.RAGDOLL)), body), surface);
+    const prop = { object, body, surface };
+    this.props.push(prop);
+    return prop;
+  }
+
+  /** Takes a free body back out of the world. */
+  removeProp(prop: DynamicProp): void {
+    const i = this.props.indexOf(prop);
+    if (i >= 0) this.props.splice(i, 1);
+    this.world.removeRigidBody(prop.body);
+  }
+
   /** Nearest hit along a ray. `mask` selects collision groups; defaults to solid world and props. */
   raycast(origin: THREE.Vector3, dir: THREE.Vector3, maxDistance: number, mask = SOLID, exclude?: RAPIER.RigidBody, skip?: (collider: RAPIER.Collider) => boolean): RayHit | null {
     this.ray.origin.x = origin.x;

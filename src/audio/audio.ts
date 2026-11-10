@@ -16,6 +16,13 @@ export interface PlayOptions {
   delay?: number;
 }
 
+/** One sound cut out of a longer recording. */
+export interface Slice {
+  buffer: AudioBuffer;
+  start: number;
+  length: number;
+}
+
 export interface Loop {
   setVolume(v: number, glide?: number): void;
   setRate(r: number): void;
@@ -61,6 +68,7 @@ export class Audio {
   private fwd = new THREE.Vector3();
   private up = new THREE.Vector3();
   private probe = 0;
+  private cuts = new Map<string, Slice[]>();
   ready = false;
 
   constructor(private physics: Physics) {
@@ -303,6 +311,98 @@ export class Audio {
       this.voices.push(voice);
     }
     return b.duration;
+  }
+
+  /**
+   * The separate sounds inside one recording: a take of someone breathing is
+   * so many breaths with quiet between them. Empty until the file has arrived.
+   */
+  slices(key: string): Slice[] {
+    const k = this.find(key);
+    if (!k) return [];
+    const file = this.files.get(k)![0];
+    const have = this.cuts.get(file);
+    if (have) return have;
+    const b = this.buffers.get(file);
+    if (!b) {
+      this.buffer(file);
+      return [];
+    }
+    const data = b.getChannelData(0);
+    const hop = Math.round(b.sampleRate * 0.02);
+    const level: number[] = [];
+    let peak = 0;
+    for (let i = 0; i + hop <= data.length; i += hop) {
+      let sum = 0;
+      for (let j = i; j < i + hop; j++) sum += data[j] * data[j];
+      const rms = Math.sqrt(sum / hop);
+      level.push(rms);
+      peak = Math.max(peak, rms);
+    }
+    const out: Slice[] = [];
+    const floor = peak * 0.09;
+    let from = -1, quiet = 0;
+    for (let i = 0; i <= level.length; i++) {
+      const loud = i < level.length && level[i] > floor;
+      if (loud) {
+        if (from < 0) from = i;
+        quiet = 0;
+      } else if (from >= 0 && (++quiet > 7 || i === level.length)) {
+        // The sound ran from `from` to where it last was loud; keep a little air either side.
+        const to = i - quiet + 1;
+        if (to - from >= 6) {
+          const start = Math.max(0, from * 0.02 - 0.05);
+          out.push({ buffer: b, start, length: Math.min(b.duration, to * 0.02 + 0.09) - start });
+        }
+        from = -1;
+      }
+    }
+    this.cuts.set(file, out);
+    return out;
+  }
+
+  /** Plays one sound cut from a longer recording, faded at both ends. */
+  playSlice(slice: Slice, o: PlayOptions = {}): void {
+    if (this.ctx.state !== 'running') return;
+    const ctx = this.ctx;
+    const src = ctx.createBufferSource();
+    src.buffer = slice.buffer;
+    const rate = (o.rate ?? 1) * (0.96 + Math.random() * 0.08);
+    src.playbackRate.value = rate;
+    const { head } = this.chain(o, false);
+    const fade = ctx.createGain();
+    const when = ctx.currentTime + (o.delay ?? 0);
+    const length = slice.length / rate;
+    fade.gain.setValueAtTime(0, when);
+    fade.gain.linearRampToValueAtTime(1, when + 0.03);
+    fade.gain.setValueAtTime(1, when + Math.max(0.04, length - 0.07));
+    fade.gain.linearRampToValueAtTime(0, when + length);
+    src.connect(fade).connect(head);
+    src.start(when, slice.start, slice.length);
+  }
+
+  /** The recorder's own beeper, heard through its own microphone. */
+  beep(frequency: number, length: number, volume = 0.12, delay = 0): void {
+    if (this.ctx.state !== 'running') return;
+    const ctx = this.ctx;
+    const osc = ctx.createOscillator();
+    osc.type = 'square';
+    osc.frequency.value = frequency;
+    const g = ctx.createGain();
+    const when = ctx.currentTime + delay;
+    g.gain.setValueAtTime(0, when);
+    g.gain.linearRampToValueAtTime(volume, when + 0.004);
+    g.gain.setValueAtTime(volume, when + length - 0.01);
+    g.gain.linearRampToValueAtTime(0, when + length);
+    osc.connect(g).connect(this.input);
+    osc.start(when);
+    osc.stop(when + length + 0.02);
+  }
+
+  /** The feed's sound, on or off, at once. */
+  feed(on: boolean): void {
+    this.master.gain.cancelScheduledValues(this.ctx.currentTime);
+    this.master.gain.setTargetAtTime(on ? 0.9 : 0, this.ctx.currentTime, on ? 0.05 : 0.012);
   }
 
   /** Starts a looping sound; it begins as soon as its file has arrived. */

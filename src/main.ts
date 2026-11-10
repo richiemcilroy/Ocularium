@@ -9,6 +9,7 @@ import { buildLevel, type Level } from './world/level';
 import { Player } from './game/player';
 import { Arms } from './game/weapon';
 import { Body } from './game/body';
+import { Garrison } from './game/enemy';
 import { Effects } from './world/effects';
 import { Audio } from './audio/audio';
 import { Soundscape } from './audio/soundscape';
@@ -89,6 +90,7 @@ async function boot(): Promise<void> {
   const euler = new THREE.Euler(0, 0, 0, 'YXZ').setFromQuaternion(camera.quaternion);
   let last = performance.now();
   let frames = 0;
+  const rate = num('speed', 1);
 
   // `pos=` or `fly=1` gives a free camera for looking at the level; otherwise you wear the camera.
   const fly = !level || params.has('fly') || params.has('pos');
@@ -105,62 +107,125 @@ async function boot(): Promise<void> {
   const arms = player && physics && effects ? await Arms.create(scene, assets, physics, player, effects) : null;
   const body = arms && player && physics && level && params.get('body') !== '0' ? await Body.create(scene, assets, physics, level, player, arms) : null;
 
+  const garrison = arms && player && physics && level && effects && params.get('enemies') !== '0' ? await Garrison.create(scene, assets, physics, level, player, arms, effects) : null;
+
   const audio = physics ? new Audio(physics) : null;
   const sound = audio && level && player ? new Soundscape(audio, level, player, arms) : null;
+  if (garrison) garrison.voice = sound;
   // The library streams in behind the level; nothing waits on it.
   audio?.load();
 
+  const watching = params.has('watch') ? new THREE.Vector3(...vec('from', [2.6, 1.2, -1.2])) : null;
   const third = params.has('third') ? new THREE.Vector3(...vec('third', [0, 1.4, 3])) : null;
   if (third) body?.figure.rig.show('head_', true, true);
   const veil = $('veil'), stamp = $('stamp'), prompt = $('prompt');
   let running = auto;
   let clock = 7 * 3600 + 41 * 60 + 22;
+  // Each wearer's recording gets the next number.
+  let recording = 217;
   const two = (n: number) => String(Math.floor(n)).padStart(2, '0');
   const writeStamp = () => {
     const d = new Date();
-    stamp.textContent = `1403-${two(d.getMonth() + 1)}-${two(d.getDate())} T${two(clock / 3600)}:${two((clock / 60) % 60)}:${two(clock % 60)}Z\nOCULARIUM BODY 3  X6039A217`;
+    stamp.textContent = `1403-${two(d.getMonth() + 1)}-${two(d.getDate())} T${two(clock / 3600)}:${two((clock / 60) % 60)}:${two(clock % 60)}Z\nOCULARIUM BODY 3  X6039A${recording}`;
   };
   writeStamp();
   status.textContent = '';
+
+  // The feed: live while the wearer lives, a few seconds of it lying where they fell, then nothing,
+  // then the next wearer switching their camera on.
+  let feed: 'live' | 'down' | 'dark' = 'live';
+  let feedFor = 0;
+  let started = false;
+  const begin = () => {
+    // The recording starts with a hand coming off the camera.
+    started = true;
+    arms?.stow();
+    bodycam.powerOn();
+    sound?.feed(true);
+  };
+  if (player && arms) {
+    player.events.death = (direction) => {
+      body?.collapse(direction, 1);
+      arms.drop();
+      sound?.own('voice/death', 0.9);
+      bodycam.knock(1);
+      feed = 'down';
+      feedFor = 0;
+    };
+    player.events.hurt = (amount) => {
+      bodycam.knock(Math.min(1, amount / 45));
+      if (!player.dead) sound?.own('voice/pain', 0.5 + Math.min(0.4, amount / 100));
+    };
+    arms.events.spatter = (amount) => (bodycam.gore.value = Math.min(1, bodycam.gore.value + amount * 0.45));
+  }
+  const respawn = () => {
+    if (!player || !level) return;
+    player.revive(level.spawn.position, level.spawn.yaw);
+    body?.renew();
+    arms?.raise();
+    recording++;
+    writeStamp();
+    feed = 'live';
+    begin();
+  };
+
   if (auto) {
     veil.classList.add('hidden');
     if (player) stamp.style.display = 'block';
+    if (params.has('intro')) begin();
   } else {
     prompt.textContent = 'CLICK TO BEGIN';
-    $('keys').textContent = 'W A S D  MOVE          SHIFT  RUN\nC  CROUCH             SPACE  JUMP\nQ / E  LEAN           MOUSE  AIM\nLEFT BUTTON  CUT      RIGHT BUTTON  SHIELD\nF  THRUST             ESC  PAUSE';
+    $('keys').textContent =
+      'W A S D  MOVE              SHIFT  RUN\nC  CROUCH                 SPACE  JUMP\nQ / E  LEAN               MOUSE  AIM\nLEFT BUTTON  CUT          F  THRUST\nHOLD EITHER  STRIKE HARDER\nRIGHT BUTTON  SHIELD      ESC  PAUSE';
     veil.addEventListener('click', () => input.requestLock());
     input.onLockChange = (locked) => {
       running = locked;
       if (locked) audio?.resume();
       else audio?.suspend();
+      if (locked && !started && player) begin();
       veil.classList.toggle('hidden', locked);
       veil.classList.add('paused');
-      stamp.style.display = locked ? 'block' : 'none';
-      prompt.textContent = 'PAUSED — CLICK TO RESUME';
+      prompt.textContent = 'PAUSED. CLICK TO RESUME';
       last = performance.now();
     };
   }
 
   renderer.setAnimationLoop(() => {
     const now = performance.now();
-    const dt = Math.min((now - last) / 1000, 0.1);
+    // `speed=` slows everything down, for looking at fast things.
+    const dt = Math.min((now - last) / 1000, 0.1) * rate;
     last = now;
     stats.push(now);
 
     if (player && physics) {
       if (running && !(window as any).__freeze) {
-        player.control(input, dt);
-        physics.update(dt, () => player.fixedStep(physics.step));
+        // While the hand is still on the camera the wearer is standing still.
+        player.control(input, dt, !!arms?.covering);
+        physics.update(dt, () => {
+          player.fixedStep(physics.step);
+          garrison?.fixedStep(physics.step);
+        });
         player.frame(dt);
         body?.begin(dt);
         arms?.update(dt, input);
         body?.finish();
+        garrison?.update(dt, physics.alpha);
         effects?.update(dt, camera);
         sound?.update(dt, camera);
         const whole = Math.floor(clock);
         clock += dt;
         if (Math.floor(clock) !== whole) writeStamp();
+
+        feedFor += dt;
+        if (feed === 'down' && feedFor > 3.4) {
+          // Nobody is coming to switch it off. The feed ends.
+          bodycam.cut();
+          sound?.feed(false);
+          feed = 'dark';
+          feedFor = 0;
+        } else if (feed === 'dark' && feedFor > 2.6) respawn();
       }
+      stamp.style.display = running && bodycam.settled ? 'block' : 'none';
       camera.position.copy(player.eye);
       camera.quaternion.copy(player.orientation);
       if (third) {
@@ -175,6 +240,14 @@ async function boot(): Promise<void> {
           camera.position.copy(third).applyAxisAngle(camera.up, player.yaw).add(player.position);
           camera.lookAt(player.position.x, player.position.y + num('thirdy', 1.05), player.position.z);
         }
+      }
+      if (watching && garrison) {
+        // Debug: stand off from one of the garrison and look at him.
+        const s = garrison.soldiers[Number(params.get('watch')) || 0];
+        if (s.dead) s.rig.worldPosition('pelvis', focus).setY(s.position.y);
+        else focus.copy(s.position);
+        camera.position.copy(watching).applyAxisAngle(camera.up, s.yaw).add(focus);
+        camera.lookAt(focus.x, focus.y + (s.dead ? 0.3 : 1.05), focus.z);
       }
       motion.copy(running ? player.spin : motion.set(0, 0, 0));
     } else {
@@ -200,7 +273,7 @@ async function boot(): Promise<void> {
 
   if (fly) canvas.addEventListener('click', () => input.requestLock());
   (window as any).__ready = true;
-  (window as any).__game = { renderer, scene, camera, bodycam, input, euler, stats, level, physics, player, assets, arms, body, effects, audio, sound };
+  (window as any).__game = { renderer, scene, camera, bodycam, input, euler, stats, level, physics, player, assets, arms, body, effects, audio, sound, garrison };
 }
 
 boot().catch((e) => {
