@@ -1,36 +1,28 @@
 import * as THREE from 'three/webgpu';
 import type { Assets } from '../core/assets';
 import { GROUP, RAPIER, groups, type Physics } from '../physics/physics';
-import type { SurfaceKind } from '../world/builder';
-import { strikeSurface, type Effects } from '../world/effects';
+import type { Effects } from '../world/effects';
 import type { EnemySpawn, Level } from '../world/level';
 import { Figure, dropSword } from './body';
 import { Spring, type Player } from './player';
 import { Fallen, Ragdoll, type Limb } from './ragdoll';
 import { Rig } from './rig';
-import { BladeSweep, THETA0, THETA1, Ward, boardPose, carryPose, cutPose, ease, parryPose, thrustPose, type Arms, type Blow, type Owned, type Pose, type Strike, type Target } from './weapon';
+import { Board, Gore, REACH, Steel, bloodied, carryPose, ease, lungePose, parryPose, severity, swingPose, withinReach, type Blow, type Owned, type Pose, type Strike, type Target, type Voice } from './steel';
+import { boardPose, type Arms } from './weapon';
 
-/** What a fight sounds like; the soundscape answers to this. */
-export interface Voice {
-  at(key: string, point: THREE.Vector3, volume?: number, rate?: number): number;
-  flesh(point: THREE.Vector3, energy?: number): void;
-  clash(point: THREE.Vector3, energy?: number): void;
-  shield(point: THREE.Vector3, energy?: number): void;
-  fall(point: THREE.Vector3, kind?: 'body/fall' | 'body/hit' | 'sword/drop', volume?: number): void;
-  step(point: THREE.Vector3, surface: SurfaceKind, loudness: number): void;
-  blade(surface: SurfaceKind, point: THREE.Vector3, energy: number): void;
-}
+export type { Voice };
 
 const CHEST = 1.375;
 const WALK = 1.15;
 const ADVANCE = 2.3;
 const RUN = 3.7;
 /** How close a soldier wants to stand to the man he is fighting, and how close he steps to hit him. */
-const MEASURE = 1.9;
-const REACH = 1.3;
+const MEASURE = 1.95;
+const CLOSE = 1.3;
 
-type State = 'post' | 'patrol' | 'alert' | 'chase' | 'fight' | 'return' | 'broken' | 'dead';
-type Phase = 'ready' | 'windup' | 'strike' | 'recover';
+type State = 'post' | 'patrol' | 'alert' | 'chase' | 'fight' | 'return' | 'broken' | 'down' | 'dead';
+/** What the sword arm is doing: at rest, drawing back, letting go, coming back. */
+type Act = 'guard' | 'wind' | 'throw' | 'recover';
 
 interface Volume {
   collider: RAPIER.Collider;
@@ -46,16 +38,18 @@ const LIMB: Record<string, Limb> = {
   head: 'head', torso: 'chest', hips: 'pelvis', arm_r: 'upperarm_r', forearm_r: 'lowerarm_r', arm_l: 'upperarm_l', forearm_l: 'lowerarm_l',
   thigh_l: 'thigh_l', thigh_r: 'thigh_r', shin_l: 'calf_l', shin_r: 'calf_r',
 };
-/** The bone a wound on each part bleeds from. */
-const WOUND: Record<string, string> = {
+/** The bone each part is carried by. */
+const BONE: Record<string, string> = {
   head: 'head', torso: 'spine_03', hips: 'pelvis', arm_r: 'upperarm_r', forearm_r: 'lowerarm_r', arm_l: 'upperarm_l', forearm_l: 'lowerarm_l',
   thigh_l: 'thigh_l', thigh_r: 'thigh_r', shin_l: 'calf_l', shin_r: 'calf_r',
 };
 
 const UP = new THREE.Vector3(0, 1, 0);
 const DOWN = new THREE.Vector3(0, -1, 0);
+const ORIGIN = new THREE.Vector2();
 const a = new THREE.Vector3(), b = new THREE.Vector3(), c = new THREE.Vector3();
 const q = new THREE.Quaternion(), q2 = new THREE.Quaternion();
+const m4 = new THREE.Matrix4(), unit = new THREE.Vector3();
 const approach = (value: number, target: number, rate: number, dt: number) => target + (value - target) * Math.exp(-rate * dt);
 const wrap = (x: number) => Math.atan2(Math.sin(x), Math.cos(x));
 const rand = (lo: number, hi: number) => lo + Math.random() * (hi - lo);
@@ -63,7 +57,9 @@ const rand = (lo: number, hi: number) => lo + Math.random() * (hi - lo);
 /**
  * One of the men holding the castle. He is posed the way the wearer is: a
  * chest put where it has to be, feet that stay where they were planted, hands
- * on what they hold. What he does with all that is decided here.
+ * on what they hold. His sword is the same kind of thing as the wearer's: a
+ * weight his arm drives about, so that no two of his blows are alike and all
+ * of them can be stopped. What he does with it is decided here.
  */
 export class Soldier implements Target {
   readonly position = new THREE.Vector3();
@@ -72,7 +68,7 @@ export class Soldier implements Target {
   readonly shield: THREE.Group | null;
   yaw = 0;
   state: State = 'post';
-  phase: Phase = 'ready';
+  act: Act = 'guard';
   /** 100 whole .. 0 dead. Wounds take it at once and go on taking it as they bleed. */
   vitality = 100;
   stamina = 1;
@@ -88,7 +84,11 @@ export class Soldier implements Target {
   private controller: RAPIER.KinematicCharacterController;
   private filter = groups(GROUP.BODY, GROUP.WORLD | GROUP.PROP | GROUP.PLAYER | GROUP.BODY);
   private volumes: Volume[] = [];
-  private ward: Ward;
+  private steel: Steel;
+  private board: Board | null = null;
+  private gore: Gore;
+  private blood: { value: number };
+  private bloody = 0;
   private prev = new THREE.Vector3();
   private curr = new THREE.Vector3();
   private grounded = true;
@@ -97,33 +97,39 @@ export class Soldier implements Target {
   private turn = 5;
   private knock = new THREE.Vector3();
   private aimPitch = 0;
+  private zone = 0;
   private eye = new THREE.Vector3();
   private chest = new THREE.Quaternion();
   private frame = new THREE.Quaternion();
   private e = new THREE.Euler(0, 0, 0, 'YXZ');
   private pose: Pose = { g: new THREE.Vector3(0.2, -0.3, -0.3), q: new THREE.Quaternion() };
-  private from: Pose = { g: new THREE.Vector3(), q: new THREE.Quaternion() };
+  private rest: Pose = { g: new THREE.Vector3(), q: new THREE.Quaternion() };
   private target: Pose = { g: new THREE.Vector3(), q: new THREE.Quaternion() };
-  private sub: Pose = { g: new THREE.Vector3(), q: new THREE.Quaternion() };
-  private board: Pose = { g: new THREE.Vector3(-0.32, -0.8, -0.18), q: new THREE.Quaternion() };
-  private sweep = new BladeSweep();
+  private boardAt: Pose = { g: new THREE.Vector3(-0.32, -0.8, -0.18), q: new THREE.Quaternion() };
+  /** Where his sword hand is carried, off centre, and where it is being taken. */
+  private o = new THREE.Vector2();
+  private oFrom = new THREE.Vector2();
+  private oTo = new THREE.Vector2();
+  private heading = new THREE.Vector2();
+  private thrusting = false;
+  private reach = -1;
+  private reachFrom = -1;
   private t = 0;
   private duration = 0.4;
-  private thrusting = false;
-  private travel = new THREE.Vector2(-0.86, -0.5);
-  private at = 0;
-  private from0 = 0;
-  private to1 = 0;
   private power = 1;
-  private landedOn = false;
+  private feint = false;
+  private more = 0;
+  private seed = Math.random() * 100;
+  private clock = 0;
+  private threat = new THREE.Vector2();
   private guard = 0;
   private wantGuard = 0;
-  private guardSide = 1;
   private ready = 0;
   private stagger = 0;
   private daze = 0;
   private bleed = 0;
   private limp = 0;
+  private reel = 0;
   private disarmed = false;
   private shieldDead = false;
   private flinchPitch = new Spring(3.2, 0.5);
@@ -140,14 +146,19 @@ export class Soldier implements Target {
   private circle = 1;
   private circleIn = 0;
   private attackIn = 1;
+  private away = 0;
   private sawSwing = -1;
   private patrolAt = 0;
   private path: number[] = [];
   private pathIn = 0;
   private stuck = 0;
   private blocked = 0;
-  private wounds: { bone: string; rate: number; drip: number }[] = [];
-  private mine = (col: RAPIER.Collider) => (this.physics.owners.get(col.handle) as Owned | undefined)?.who instanceof Soldier;
+  private wounds: { bone: string; rate: number; drip: number; pulse: number; out: THREE.Vector3 }[] = [];
+  private floored: Ragdoll | null = null;
+  private flooredFor = 0;
+  private rising = 0;
+  private lying: ReturnType<Rig['capture']> | null = null;
+  private strapped = new THREE.Matrix4();
 
   constructor(
     private garrison: Garrison,
@@ -161,6 +172,7 @@ export class Soldier implements Target {
     sword: THREE.Object3D,
     shield: THREE.Object3D | null,
     private spawn: EnemySpawn,
+    index: number,
     skill: number,
     nerve: number,
   ) {
@@ -168,6 +180,7 @@ export class Soldier implements Target {
     this.nerve = nerve;
     scene.add(rig.root);
     this.figure = new Figure(rig, physics);
+    this.gore = new Gore(rig.bones, rig.meshes);
     this.sword.add(sword);
     scene.add(this.sword);
     if (shield) {
@@ -180,6 +193,7 @@ export class Soldier implements Target {
         o.frustumCulled = false;
         o.castShadow = true;
       });
+    this.blood = bloodied(this.sword);
 
     const w = physics.world;
     this.body = w.createRigidBody(RAPIER.RigidBodyDesc.kinematicPositionBased());
@@ -210,7 +224,22 @@ export class Soldier implements Target {
       limb(`thigh_${s}`, `thigh_${s}`, `calf_${s}`, 0.078);
       limb(`shin_${s}`, `calf_${s}`, `foot_${s}`, 0.056);
     }
-    this.ward = new Ward(physics, this, this.shield);
+    this.steel = new Steel(physics, this.sword, this, index, effects, () => garrison.voice);
+    this.steel.onFlesh = (strike, owner) => {
+      // The garrison's swords are not for each other.
+      if (owner.who instanceof Soldier) return 'nothing';
+      const blow = owner.who.struck(strike, owner.part);
+      if (blow === 'cut' || blow === 'through') this.bloody = Math.min(1, this.bloody + 0.3);
+      return blow;
+    };
+    this.steel.onStop = (kind, energy) => {
+      if ((kind !== 'shield' && kind !== 'blade') || energy < 0.3) return;
+      // A blow that stops dead leaves him open for a moment.
+      this.stamina = Math.max(0, this.stamina - 0.05 * energy);
+      this.stagger = Math.max(this.stagger, 0.3 * energy);
+      this.more = 0;
+    };
+    if (this.shield) this.board = new Board(physics, this.shield, this, index);
     this.figure.gait.onStep = (_foot, point, speed) => {
       if (speed < 0.5) return;
       const hit = physics.raycast(a.set(point.x, point.y + 0.4, point.z), DOWN, 0.9, GROUP.WORLD);
@@ -222,6 +251,9 @@ export class Soldier implements Target {
     carryPose(0.55, 0, 0.02, this.pose);
     this.frame.setFromAxisAngle(UP, this.yaw);
     this.settle(0);
+    this.toWorld(this.pose, a, q, 'sword');
+    this.steel.place(a, q);
+    this.steel.frame(1);
   }
 
   get dead(): boolean {
@@ -230,7 +262,12 @@ export class Soldier implements Target {
 
   /** In the act of hitting. */
   get striking(): boolean {
-    return this.phase === 'windup' || this.phase === 'strike';
+    return this.act === 'wind' || this.act === 'throw';
+  }
+
+  /** Where his head is, for anything that needs to find his face. */
+  head(out: THREE.Vector3): THREE.Vector3 {
+    return this.rig.worldPosition('head', out);
   }
 
   private place(p: THREE.Vector3, yaw: number): void {
@@ -267,11 +304,17 @@ export class Soldier implements Target {
       this.lastSeen.copy(p.position);
       this.lost = 0;
     }
+    // Where the wearer's blade is, as he sees it: which side of him and how high.
+    if (this.dist < 3.5) {
+      const s = this.arms.sword;
+      a.set(0, 0.5, 0).applyQuaternion(s.quaternion).add(s.position).sub(this.eye).applyQuaternion(q.copy(this.frame).invert());
+      this.threat.set(THREE.MathUtils.clamp(a.x / 0.45, -1, 1), THREE.MathUtils.clamp((a.y + 0.1) / 0.45, -1, 1));
+    }
   }
 
   /** Told of the wearer by a shout or the sound of steel. */
   rouse(where: THREE.Vector3): void {
-    if (this.dead || this.state === 'broken' || this.aware) return;
+    if (this.dead || this.state === 'broken' || this.state === 'down' || this.aware) return;
     this.aware = true;
     this.lastSeen.copy(where);
     this.lost = 0;
@@ -285,7 +328,7 @@ export class Soldier implements Target {
     this.aware = true;
     this.state = 'alert';
     this.timer = rand(0.45, 0.8);
-    this.garrison.voice?.at('voice/alert', a.set(this.position.x, this.position.y + 1.6, this.position.z), 1);
+    this.garrison.voice?.at('voice/alert', this.mouth(a), 1);
     this.garrison.rouse(this.position, 8.5, this.player.position, this);
   }
 
@@ -295,7 +338,7 @@ export class Soldier implements Target {
     const p = this.player;
     this.senseIn -= dt;
     if (this.senseIn <= 0) {
-      this.senseIn = rand(0.08, 0.14);
+      this.senseIn = rand(0.06, 0.11);
       this.sense();
     }
     this.want.set(0, 0);
@@ -304,6 +347,7 @@ export class Soldier implements Target {
     this.timer -= dt;
     this.stagger = Math.max(0, this.stagger - dt);
     this.daze = Math.max(0, this.daze - dt);
+    this.reel = Math.max(0, this.reel - dt * 0.55);
     if (!this.sees) this.lost += dt;
     const idle = this.state === 'post' || this.state === 'patrol' || this.state === 'return';
     if (idle && this.sees) this.notice();
@@ -343,7 +387,7 @@ export class Soldier implements Target {
         if (this.timer <= 0) this.state = 'chase';
         break;
       case 'chase':
-        if (this.sees && this.dist < 2.6) {
+        if (this.sees && this.dist < 2.7) {
           this.state = 'fight';
           this.attackIn = rand(0.25, 0.9);
           break;
@@ -368,68 +412,72 @@ export class Soldier implements Target {
         break;
       }
     }
-    if (this.stagger > 0) this.want.set(0, 0);
+    if (this.stagger > 0) this.want.multiplyScalar(0.15);
   }
 
   /** Face to face with the wearer. */
   private fight(dt: number): void {
     const p = this.player, arms = this.arms;
-    if (!this.sees && this.lost > 1.2) {
-      this.state = 'chase';
-      return;
-    }
-    if (this.dist > 4.2) {
+    if ((!this.sees && this.lost > 1.2) || this.dist > 4.4) {
       this.state = 'chase';
       return;
     }
     this.faceTo = this.bearing;
-    this.turn = this.phase === 'strike' ? 1.5 : this.daze > 0 ? 1.5 : 5.5;
-    const tired = this.stamina < 0.18;
+    this.turn = this.act === 'throw' ? 1.6 : this.daze > 0 ? 1.5 : 5.5;
+    const tired = this.stamina < 0.2;
+    const hurt = this.vitality < 45;
     // Only so many can get at one man at once; the rest wait their turn a little further out.
     const waiting = this.garrison.rank(this) >= 2;
-    let measure = waiting ? 3.3 : tired ? 2.7 : MEASURE;
+    let measure = waiting ? 3.3 : tired ? 2.8 : hurt ? 2.35 : MEASURE;
+    this.away = Math.max(0, this.away - dt);
+    if (this.away > 0) measure = Math.max(measure, 2.7);
 
-    // Reading what the wearer's sword is doing.
-    const threatened = arms.attacking && this.dist < 2.9 && !p.dead;
+    // Reading the wearer's sword: drawn back, or already on its way.
+    const fast = arms.steel.tipSpeed > 5.5;
+    const threatened = !p.dead && this.dist < 3.1 && (arms.attacking || fast);
     if (threatened && this.sawSwing !== arms.swings) {
       this.sawSwing = arms.swings;
-      // He either reads it or he does not, and a tired or dazed man reads less.
-      const read = this.skill * (this.shield && !this.shieldDead ? 1 : 0.7) * (tired ? 0.6 : 1) * (this.daze > 0 ? 0.3 : 1);
-      this.ready = Math.random() < read ? rand(0.1, 0.26) : -1;
-      this.guardSide = Math.random() < 0.5 ? -1 : 1;
-      // Caught winding up himself, he sometimes lets his own blow go regardless.
-      if (this.phase === 'windup' && this.ready >= 0 && Math.random() < 0.55) this.recover(0.25);
+      // He either reads it or he does not, and a tired, hurt or dazed man reads less.
+      const read = this.skill * (this.board && !this.shieldDead ? 1 : 0.75) * (tired ? 0.6 : 1) * (this.daze > 0 ? 0.3 : 1) * (hurt ? 1.15 : 1);
+      this.ready = Math.random() < read ? rand(0.08, 0.24) * (1.4 - this.skill) : -1;
+      // Caught drawing back himself, he may give it up to cover, or go through with it.
+      if (this.act === 'wind' && this.ready >= 0 && Math.random() > this.nerve * 0.7) this.recover(0.2);
     }
-    if (threatened && this.ready >= 0 && this.phase !== 'strike' && this.phase !== 'windup') {
+    if (threatened && this.ready >= 0 && !this.striking) {
       this.ready -= dt;
       if (this.ready <= 0) this.wantGuard = 1;
-      // A blow being wound up is a good one to be further away from.
-      if (arms.phase === 'hold' && arms.charge > 0.35) measure = Math.max(measure, 2.5);
+      // A blow being wound up is a good one to be further away from, if he has nothing to put in its way.
+      if (arms.loaded && arms.charge > 0.4 && (!this.board || hurt)) measure = Math.max(measure, 2.6);
     }
 
     // Keeping the measure, and never standing still in it.
     this.circleIn -= dt;
     if (this.circleIn <= 0) {
-      this.circleIn = rand(1.2, 3.4);
+      this.circleIn = rand(1.0, 3.2);
       this.circle = Math.random() < 0.5 ? -1 : 1;
-      if (Math.random() < 0.25) this.circle = 0;
+      if (Math.random() < 0.2) this.circle = 0;
     }
-    const closing = this.phase === 'windup' || this.phase === 'strike';
-    const range = closing ? REACH : measure;
-    const radial = THREE.MathUtils.clamp((this.dist - range) * 3.2, -1.7, closing ? 2.4 : 1.6);
+    const closing = this.striking;
+    const range = closing ? CLOSE : measure;
+    const radial = THREE.MathUtils.clamp((this.dist - range) * 3.4, -2.1, closing ? 2.6 : 1.6);
     const fx = -Math.sin(this.bearing), fz = -Math.cos(this.bearing);
-    let side = this.circle * (closing ? 0.2 : 0.75);
+    let side = this.circle * (closing ? 0.25 : 0.8);
     // Something is between them: go round it rather than lean on it.
-    if (this.blocked > 0.35) side = (this.circle || 1) * 1.7;
-    this.want.set(fx * radial * (this.blocked > 0.35 ? 0.4 : 1) + fz * side, fz * radial * (this.blocked > 0.35 ? 0.4 : 1) - fx * side);
+    const held = this.blocked > 0.35;
+    if (held) side = (this.circle || 1) * 1.7;
+    this.want.set(fx * radial * (held ? 0.4 : 1) + fz * side, fz * radial * (held ? 0.4 : 1) - fx * side);
+    // He does not stand in another man's way, which spreads them round the wearer.
+    this.garrison.spread(this, this.want);
 
     // His own blows.
-    this.attackIn -= dt;
-    const open = arms.phase === 'recover' || arms.busy;
-    if (this.phase === 'ready' && this.stagger <= 0 && this.daze <= 0 && !waiting && this.wantGuard === 0 && this.dist < 2.35 && Math.abs(wrap(this.bearing - this.yaw)) < 0.5 && this.stamina > 0.1 && this.garrison.mayStrike(this)) {
-      // He strikes when his own time comes round, at once into an opening, and sometimes into a blow that is taking too long.
-      const riposte = open && this.attackIn < 0.9 && Math.random() < this.nerve * dt * 9;
-      const stop = arms.phase === 'hold' && arms.charge > 0.5 && Math.random() < this.nerve * dt * 1.6;
+    this.attackIn -= dt * (p.winded || p.stamina < 0.2 ? 1.8 : 1);
+    if (this.act === 'guard' && this.stagger <= 0 && this.daze <= 0 && !waiting && this.wantGuard === 0 && this.dist < 2.45 && Math.abs(wrap(this.bearing - this.yaw)) < 0.5 && this.stamina > 0.1 && this.garrison.mayStrike(this)) {
+      // He strikes when his own time comes round; at once into an opening or a turned back; and sometimes
+      // straight into a blow that is taking too long to come.
+      const open = arms.phase === 'recover' || arms.busy || (arms.steel.tipSpeed < 1.2 && arms.offset.length() > 0.35);
+      const behind = Math.abs(wrap(this.bearing + Math.PI - p.aimYaw)) > 1.9;
+      const riposte = (open || behind) && Math.random() < this.nerve * dt * 10;
+      const stop = arms.loaded && arms.charge > 0.5 && Math.random() < this.nerve * dt * 1.8;
       if (this.attackIn <= 0 || riposte || stop) this.begin(stop);
     }
   }
@@ -484,101 +532,172 @@ export class Soldier implements Target {
 
   // ------------------------------------------------------------------ his sword
 
+  /** How strongly his arm can drive the sword just now. */
+  private strength(): number {
+    return (0.66 + 0.26 * ease(THREE.MathUtils.clamp(this.stamina / 0.4, 0, 1))) * (0.75 + 0.25 * (this.vitality / 100));
+  }
+
+  /**
+   * Starts a blow. Nothing about it is fixed: which side it is drawn back to
+   * and how high, how far, how long he takes over it, where on the wearer it
+   * is meant for, whether it is a cut or a point, whether the first drawing
+   * back is a lie, and whether another follows it.
+   */
   private begin(quick: boolean): void {
-    // Heavy blows are rare, slow to come and hard to stop.
     const heavy = !quick && Math.random() < 0.18 && this.stamina > 0.4;
-    this.thrusting = quick || Math.random() < 0.3;
+    this.thrusting = quick || Math.random() < 0.28;
     this.power = heavy ? 1.7 : 1;
-    if (!this.thrusting) {
-      const sideways = Math.random() < 0.5 ? -1 : 1;
-      this.travel.set(sideways * rand(0.7, 1), rand(-0.75, 0.1)).normalize();
+    // Low when a shield is up in front of him, otherwise wherever he fancies.
+    const pick = Math.random();
+    this.zone = this.arms.guard > 0.5 && pick < 0.6 ? -0.34 : pick < 0.22 ? 0.12 : pick < 0.8 ? 0 : -0.3;
+    const slow = 1 / this.strength();
+    if (this.thrusting) {
+      this.reachFrom = -1;
+      this.oTo.set(rand(-0.2, 0.2), rand(-0.15, 0.15));
+    } else {
+      const overhead = Math.random() < 0.14;
+      const side = Math.random() < 0.5 ? 1 : -1;
+      const angle = overhead ? Math.PI / 2 + rand(-0.3, 0.3) : side > 0 ? rand(-0.25, 1.15) : Math.PI - rand(-0.25, 1.15);
+      const far = rand(0.42, 0.58) + (heavy ? 0.06 : 0);
+      this.oTo.set(Math.cos(angle) * far * (REACH.x / 0.62), Math.sin(angle) * far * 0.85);
+      withinReach(this.oTo);
+      this.feint = !heavy && Math.random() < this.skill * 0.32;
     }
-    this.from.g.copy(this.pose.g);
-    this.from.q.copy(this.pose.q);
-    this.phase = 'windup';
+    this.more = !heavy && !quick && Math.random() < 0.34 * this.nerve ? (Math.random() < 0.25 ? 2 : 1) : 0;
+    this.oFrom.copy(this.o);
+    this.act = 'wind';
     this.t = 0;
-    const slow = 1 + 0.4 * (1 - ease(THREE.MathUtils.clamp(this.stamina / 0.4, 0, 1)));
-    this.duration = (heavy ? rand(0.8, 1.0) : quick ? 0.3 : rand(0.4, 0.58)) * slow;
-    this.at = this.thrusting ? -1 - (heavy ? 0.3 : 0) : THETA0 - (heavy ? 0.4 : 0);
-    this.landedOn = false;
+    this.duration = (heavy ? rand(0.75, 0.95) : quick ? 0.26 : rand(0.34, 0.56)) * slow;
     this.stamina = Math.max(0, this.stamina - (heavy ? 0.14 : 0.06));
     this.garrison.struck(this);
-    if (heavy || Math.random() < 0.35) this.garrison.voice?.at('voice/effort', this.mouth(a), heavy ? 1 : 0.7);
+    if (heavy || Math.random() < 0.3) this.garrison.voice?.at('voice/effort', this.mouth(a), heavy ? 1 : 0.7);
   }
 
   private recover(duration: number): void {
-    this.phase = 'recover';
+    this.act = 'recover';
     this.t = 0;
     this.duration = duration;
-    this.from.g.copy(this.pose.g);
-    this.from.q.copy(this.pose.q);
+    this.more = 0;
+    this.feint = false;
     this.attackIn = rand(0.9, 2.6) / (0.5 + this.nerve);
-  }
-
-  private stage(at: number, out: Pose): Pose {
-    return this.thrusting ? thrustPose(at, out) : cutPose(this.travel, at, out);
+    // Often he steps back out of reach once he has had his say.
+    if (Math.random() < 0.5) this.away = rand(0.5, 1.1);
   }
 
   private mouth(out: THREE.Vector3): THREE.Vector3 {
     return out.set(this.position.x, this.position.y + 1.62, this.position.z);
   }
 
+  /** Where the sword is asked to be this frame. */
   private wield(dt: number): void {
     this.t += dt;
+    this.clock += dt;
     const u = Math.min(1, this.t / this.duration);
+    const steel = this.steel;
+    const s = this.strength();
     const fighting = this.state === 'fight' || this.state === 'chase' || this.state === 'alert';
-    if (this.phase === 'windup') {
-      this.stage(this.at, this.target);
-      const s = ease(u);
-      this.pose.g.lerpVectors(this.from.g, this.target.g, s);
-      this.pose.q.slerpQuaternions(this.from.q, this.target.q, s);
-      if (u >= 1) {
-        this.phase = 'strike';
-        this.t = 0;
-        this.from0 = this.at;
-        this.to1 = this.thrusting ? 1 + 0.1 * (this.power - 1) : THETA1 + 0.2 * (this.power - 1);
-        this.duration = this.thrusting ? 0.17 : 0.25;
-        this.sweep.reset();
-        this.garrison.voice?.at('sword/swing', this.sword.position, this.thrusting ? 0.5 : 0.8, this.thrusting ? 1.2 : 1);
-      }
-    } else if (this.phase === 'strike') {
-      const steps = 4;
-      const t0 = this.t - dt;
-      let stopped = false;
-      for (let i = 1; i <= steps && !stopped; i++) {
-        const ui = THREE.MathUtils.clamp((t0 + (dt * i) / steps) / this.duration, 0, 1);
-        this.at = this.from0 + (this.to1 - this.from0) * ease(this.thrusting ? Math.min(1, ui * 1.15) : ui);
-        this.stage(this.at, this.sub);
-        this.toWorld(this.sub, a, q, 'sword');
-        const strike = this.sweep.move(this.physics, a, q, dt / steps, GROUP.WORLD | GROUP.PROP | GROUP.HITBOX, undefined, this.mine);
-        this.pose.g.copy(this.sub.g);
-        this.pose.q.copy(this.sub.q);
-        if (strike) stopped = this.landed(strike);
-      }
-      if (this.phase === 'strike' && (u >= 1 || stopped)) this.recover(stopped ? rand(0.6, 0.85) : rand(0.5, 0.7));
-    } else {
-      // At rest: carried low until there is someone to point it at, across the body to stop a blow if he has no shield.
-      const run = fighting ? (this.state === 'chase' && this.dist > 7 ? 0.8 : 0) : 0.6;
-      const low = fighting ? Math.max(0, 0.4 - this.stamina) * 0.2 + (this.stagger > 0 ? 0.12 : 0) : 0.03;
-      carryPose(run, this.shield ? this.guard : 0, low, this.target);
-      if (!this.shield && this.guard > 0.01) {
-        parryPose(this.guardSide, this.sub);
-        this.target.g.lerp(this.sub.g, this.guard);
-        this.target.q.slerp(this.sub.q, this.guard);
-      }
-      if (this.phase === 'recover') {
-        const s = ease(u);
-        this.pose.g.lerpVectors(this.from.g, this.target.g, s);
-        this.pose.q.slerpQuaternions(this.from.q, this.target.q, s);
-        if (u >= 1) this.phase = 'ready';
-      } else {
-        const r = 1 - Math.exp(-dt * (this.guard > 0.3 ? 16 : 8));
-        this.pose.g.lerp(this.target.g, r);
-        this.pose.q.slerp(this.target.q, r);
-      }
+    // At rest: carried low until there is someone to point it at, and never held quite still.
+    const run = fighting ? (this.state === 'chase' && this.dist > 7 ? 0.8 : 0) : 0.6;
+    const low = fighting ? Math.max(0, 0.4 - this.stamina) * 0.2 + (this.stagger > 0 ? 0.12 : 0) : 0.03;
+    carryPose(run, this.board ? this.guard : 0, low, this.rest);
+    const wander = 0.008 + 0.02 * (1 - this.stamina) + (this.daze > 0 ? 0.03 : 0);
+    this.rest.g.x += Math.sin(this.clock * 0.9 + this.seed) * wander;
+    this.rest.g.y += Math.sin(this.clock * 1.3 + this.seed * 2) * wander;
+    this.rest.q.multiply(q.setFromEuler(this.e.set(Math.sin(this.clock * 0.7 + this.seed) * wander * 3, 0, Math.sin(this.clock * 1.1 + this.seed * 3) * wander * 4)));
+    if (!this.board && this.guard > 0.01) {
+      // No shield: the sword goes to meet what is coming.
+      parryPose(this.threat, this.target);
+      this.rest.g.lerp(this.target.g, this.guard);
+      this.rest.q.slerp(this.target.q, this.guard);
     }
-    const guarding = this.wantGuard > 0 && this.stagger <= 0 && this.phase !== 'strike' && this.phase !== 'windup';
+
+    if (this.act === 'guard') {
+      this.o.multiplyScalar(Math.exp(-dt * 8));
+      this.pose.g.copy(this.rest.g);
+      this.pose.q.copy(this.rest.q);
+      const quick = this.guard > 0.3 ? 1.5 : 1;
+      steel.linAcc = 42 * s * quick;
+      steel.angAcc = 62 * s * quick;
+      steel.maxSpeed = 5.5 * quick;
+      steel.maxSpin = 12 * quick;
+      steel.power = 1;
+    } else if (this.thrusting) {
+      if (this.act === 'wind') {
+        this.reach = this.reachFrom - (0.05 + (this.power > 1 ? 0.3 : 0)) * ease(u);
+        this.o.lerpVectors(this.oFrom, this.oTo, ease(u));
+        if (u >= 1) this.loose(0.16 / s);
+      } else if (this.act === 'throw') {
+        this.reach = this.reachFrom + (1.08 - this.reachFrom) * ease(u);
+        if (u >= 1) this.recover(rand(0.45, 0.65));
+      } else if (u >= 1) this.act = 'guard';
+      const hard = this.act === 'throw' ? 1 : 0.55;
+      steel.linAcc = 105 * s * hard * (0.8 + 0.2 * this.power);
+      steel.angAcc = 120 * s * hard;
+      steel.maxSpeed = 9.5 * s * (0.7 + 0.3 * hard);
+      steel.maxSpin = 18;
+      lungePose(this.reach, this.o, this.pose);
+    } else {
+      if (this.act === 'wind') {
+        this.o.lerpVectors(this.oFrom, this.oTo, ease(u));
+        this.heading.copy(this.o).negate();
+        if (u >= 1) {
+          if (this.feint) {
+            // The first drawing back was to be believed. He takes it across to the other side.
+            this.feint = false;
+            this.oFrom.copy(this.o);
+            this.oTo.set(-this.oTo.x * rand(0.8, 1), this.oTo.y * rand(0.5, 1.1));
+            this.t = 0;
+            this.duration = rand(0.2, 0.3);
+          } else this.across(rand(0.21, 0.28) / s);
+        }
+      } else if (this.act === 'throw') {
+        this.o.lerpVectors(this.oFrom, this.oTo, u * u * (3 - 2 * u));
+        this.heading.subVectors(this.oTo, this.oFrom);
+        if (u >= 1) {
+          if (this.more > 0 && this.stagger <= 0 && this.stamina > 0.15) {
+            // And back again, along a different line.
+            this.more--;
+            this.stamina = Math.max(0, this.stamina - 0.05);
+            this.across(rand(0.26, 0.34) / s);
+          } else this.recover(rand(0.5, 0.7));
+        }
+      } else {
+        this.o.multiplyScalar(Math.exp(-dt * 6));
+        if (u >= 1) this.act = 'guard';
+      }
+      const hard = this.act === 'throw' ? 1 : 0.6;
+      const drive = s * (0.75 + 0.25 * this.power);
+      steel.linAcc = 84 * drive * hard;
+      steel.angAcc = 140 * drive * hard;
+      steel.maxSpeed = 11 * drive * (0.7 + 0.3 * hard);
+      steel.maxSpin = 26 * drive * (0.7 + 0.3 * hard);
+      swingPose(this.o, this.heading, this.pose);
+    }
+    if (this.act === 'recover') {
+      const w = ease(u);
+      this.pose.g.lerp(this.rest.g, w);
+      this.pose.q.slerp(this.rest.q, w);
+      steel.power = 1;
+    }
+    const guarding = this.wantGuard > 0 && this.stagger <= 0 && !this.striking;
     this.guard += ((guarding ? 1 : 0) - this.guard) * (1 - Math.exp(-dt * (guarding ? 16 : 7)));
+  }
+
+  /** Lets a cut go: from wherever the hand is, across to the far side, and never along the same line twice. */
+  private across(duration: number): void {
+    this.oFrom.copy(this.o);
+    this.oTo.copy(this.o).normalize().multiplyScalar(-rand(0.5, 0.6)).rotateAround(ORIGIN, rand(-0.45, 0.45));
+    withinReach(this.oTo);
+    this.loose(duration);
+  }
+
+  private loose(duration: number): void {
+    this.act = 'throw';
+    this.t = 0;
+    this.duration = duration;
+    this.reachFrom = this.reach;
+    this.steel.power = this.power;
+    this.garrison.voice?.at('sword/swing', this.sword.position, this.thrusting ? 0.5 : 0.8, this.thrusting ? 1.2 : 1);
   }
 
   private toWorld(pose: Pose, position: THREE.Vector3, quaternion: THREE.Quaternion, hand: 'sword' | 'shield'): void {
@@ -587,70 +706,32 @@ export class Soldier implements Target {
     this.figure.limit(hand, position, quaternion);
   }
 
-  /** His blade met something. Returns true if that ends the stroke. */
-  private landed(s: Strike): boolean {
-    s.thrust = this.thrusting;
-    s.power = this.power;
-    const kind = s.hit.collider.collisionGroups() >>> 16;
-    const energy = Math.min(1.5, s.speed / 14);
-    if (kind & GROUP.HITBOX) {
-      const owner = this.physics.owners.get(s.hit.collider.handle) as Owned | undefined;
-      if (!owner || this.landedOn) return false;
-      this.landedOn = true;
-      const blow = owner.who.struck(s, owner.part);
-      if (blow === 'blocked') {
-        this.stamina = Math.max(0, this.stamina - 0.05);
-        // A blow that stops dead leaves him open for a moment.
-        this.stagger = Math.max(this.stagger, 0.25);
-      } else this.garrison.voice?.flesh(s.hit.point, energy);
-      return true;
-    }
-    if (kind & GROUP.PROP) {
-      const body = s.hit.collider.parent();
-      if (body) {
-        const j = Math.min(body.mass() * s.speed * 0.6, 26);
-        body.applyImpulseAtPoint({ x: s.direction.x * j, y: s.direction.y * j + j * 0.15, z: s.direction.z * j }, s.hit.point, true);
-        strikeSurface(this.effects, s.hit.surface, s.hit.point, s.hit.normal, energy * 0.6);
-        this.garrison.voice?.blade(s.hit.surface, s.hit.point, energy);
-        return body.mass() >= 6;
-      }
-      return true;
-    }
-    strikeSurface(this.effects, s.hit.surface, s.hit.point, s.hit.normal, energy);
-    this.garrison.voice?.blade(s.hit.surface, s.hit.point, energy);
-    return true;
-  }
-
   // ------------------------------------------------------------------ what is done to him
+
+  /** The wearer's blade stopped on his shield or his sword. */
+  parried(on: 'shield' | 'blade', energy: number, _point: THREE.Vector3, direction: THREE.Vector3): void {
+    if (this.dead) return;
+    this.rouse(this.player.position);
+    this.stamina = Math.max(0, this.stamina - (on === 'shield' ? 0.07 : 0.055) * energy);
+    this.flinchPitch.v += 1.2 * energy;
+    this.knock.addScaledVector(direction, 0.9 * energy).setY(0);
+    this.reel += 0.22 * energy;
+    if (this.striking && energy > 0.35) this.recover(0.45);
+    // A blow with everything behind it beats the guard aside, and so does any blow on an arm with nothing left.
+    if (energy > 1.15 || this.stamina <= 0.02) {
+      this.stagger = Math.max(this.stagger, 0.7);
+      this.flinchRoll.v += 2.5;
+    }
+  }
 
   struck(s: Strike, part: string): Blow {
     if (this.dead) return 'through';
+    const sev = severity(s);
+    if (sev < 0.1) return 'nothing';
     const voice = this.garrison.voice;
-    const force = THREE.MathUtils.clamp(s.speed / 11, 0.35, 1.5) * s.power;
     const point = s.hit.point;
     this.rouse(this.player.position);
     this.garrison.rouse(this.position, 7, this.player.position, this);
-    if (part === 'shield') {
-      this.stamina = Math.max(0, this.stamina - 0.07 * force);
-      this.effects.chips(point, s.hit.normal, WOOD, Math.round(5 + 7 * force));
-      voice?.shield(point, force);
-      this.flinchPitch.v += 1.2 * force;
-      this.knock.addScaledVector(s.direction, 0.9 * force);
-      // A blow with everything behind it beats the board aside, and so does any blow on an arm with nothing left.
-      if (force > 1.75 || this.stamina <= 0.02) {
-        this.stagger = 0.75;
-        this.flinchRoll.v += 2.5;
-      }
-      return 'blocked';
-    }
-    if (part === 'blade') {
-      this.stamina = Math.max(0, this.stamina - 0.05 * force);
-      this.effects.sparks(point, s.hit.normal, Math.round(8 + 10 * force), 0.9);
-      voice?.clash(point, force);
-      if (this.striking) this.recover(0.5);
-      if (force > 1.7) this.stagger = 0.6;
-      return 'blocked';
-    }
 
     let amount: number;
     let blow: Blow = 'cut';
@@ -659,55 +740,63 @@ export class Soldier implements Target {
       // The kettle hat covers the crown and its brim the temples. A cut that comes down on it rings;
       // one that comes in under the brim, or a point, finds the face and the neck.
       if (!s.thrust && point.y > a.y + 0.07) {
-        amount = 15 * force;
-        this.daze = Math.max(this.daze, 0.5 + 0.5 * force);
-        this.effects.sparks(point, s.hit.normal, Math.round(5 + 6 * force), 0.7);
-        voice?.clash(point, force * 0.8);
-        if (force > 2) amount = 70;
+        amount = 8 * sev;
+        this.daze = Math.max(this.daze, 0.4 + 0.35 * sev);
+        this.reel += 0.3 * sev;
+        this.effects.sparks(point, s.hit.normal, Math.round(4 + 5 * sev), 0.7);
+        voice?.clash(point, Math.min(1.2, sev * 0.6));
+        if (sev > 3.4) amount = 75;
         blow = 'glanced';
-      } else amount = (s.thrust ? 125 : 88) * force;
+      } else amount = (s.thrust ? 95 : 62) * sev;
     } else if (part === 'torso' || part === 'hips') {
       // Thirty layers of linen turn most of an edge. They do not turn a point.
-      amount = (s.thrust ? 62 : 30) * force;
+      amount = (s.thrust ? 58 : 21) * sev;
     } else if (part.includes('arm')) {
-      amount = (s.thrust ? 26 : 38) * force;
-      if (amount > 30) {
+      amount = (s.thrust ? 24 : 27) * sev;
+      if (amount > 32) {
         if (part.endsWith('_r')) this.disarm(s);
         else this.shieldDead = true;
       }
     } else {
-      amount = (s.thrust ? 30 : 40) * force;
+      amount = (s.thrust ? 26 : 29) * sev;
       if (amount > 26) this.limp = Math.min(1, this.limp + 0.6);
+      this.reel += 0.35 * sev;
     }
 
     this.vitality -= amount;
-    const real = blow !== 'glanced';
-    if (real) {
+    if (blow !== 'glanced') {
+      const bone = BONE[part] ?? 'spine_03';
       this.bleed += amount * 0.035;
-      this.wounds.push({ bone: WOUND[part] ?? 'spine_03', rate: Math.min(6, amount * 0.07), drip: 0 });
-      this.effects.blood(point, s.direction, Math.round(10 + amount * 0.45), 0.9 + 0.5 * force);
-      this.effects.blood(point, a.copy(s.hit.normal), Math.round(4 + amount * 0.12), 0.6);
-      voice?.flesh(point, force);
+      // The wound itself: a line where the edge went in, a hole where a point did, and the cloth round it filling.
+      this.gore.mark(bone, point, s.thrust ? s.direction : s.blade, s.thrust ? 0.03 : THREE.MathUtils.clamp(0.07 + 0.04 * sev, 0.07, 0.24), 0.045 + 0.02 * Math.min(4, sev));
+      this.wounds.push({ bone, rate: Math.min(7, amount * 0.08), drip: 0, pulse: amount > 34 ? rand(4, 9) : 0, out: s.hit.normal.clone() });
+      this.effects.blood(point, s.direction, Math.round(12 + amount * 0.55), 0.9 + 0.35 * Math.min(3, sev));
+      this.effects.blood(point, a.copy(s.hit.normal), Math.round(5 + amount * 0.15), 0.6);
+      voice?.flesh(point, Math.min(1.5, sev));
       // Close enough, some of it reaches the lens.
       if (this.dist < 1.9) this.arms.events.spatter?.(Math.min(1, amount / 110));
     }
     // The blow moves him, turns him and stops what he was doing.
     const local = a.copy(s.direction).applyAxisAngle(UP, -this.yaw);
-    this.flinchPitch.v += (local.z > 0 ? 1 : -1) * (1.5 + 2.5 * force);
-    this.flinchRoll.v += -Math.sign(local.x || 1) * (1 + 2 * force);
-    this.flinchYaw.v += -local.x * 2.2 * force;
-    this.knock.addScaledVector(s.direction, 1.2 * force).setY(0);
+    const jolt = Math.min(2.2, sev);
+    this.flinchPitch.v += (local.z > 0 ? 1 : -1) * (1.5 + 2.2 * jolt);
+    this.flinchRoll.v += -Math.sign(local.x || 1) * (1 + 1.8 * jolt);
+    this.flinchYaw.v += -local.x * 2 * jolt;
+    this.knock.addScaledVector(s.direction, 0.9 * jolt).setY(0);
+    this.reel += 0.22 * jolt;
     this.stagger = Math.max(this.stagger, 0.22 + amount / 110);
     if (amount > 10 && this.striking) this.recover(0.4);
     this.stamina = Math.max(0, this.stamina - 0.05);
 
-    if (this.vitality <= 0 || (this.limp >= 1 && amount > 45)) {
-      this.die(s, part, force);
+    if (this.vitality <= 0) {
+      this.die(s, part, jolt);
       // A blow with enough behind it does not stop in him.
-      return force > 1.5 && !s.thrust ? 'through' : 'cut';
+      return sev > 2.6 && !s.thrust ? 'through' : 'cut';
     }
-    if (real) voice?.at('voice/pain', this.mouth(b), 0.9);
-    if (this.vitality < 30 && this.state !== 'broken' && Math.random() > this.nerve) this.yield();
+    if (blow !== 'glanced') voice?.at('voice/pain', this.mouth(b), 0.9);
+    // Knocked off his feet: by a leg going from under him, or by more than a man can stand up to.
+    if (this.state !== 'down' && (this.reel > 1 || (this.limp >= 1 && amount > 30))) this.floor(s.direction, jolt);
+    else if (this.vitality < 30 && this.state !== 'broken' && this.state !== 'down' && Math.random() > this.nerve) this.yield();
     return blow;
   }
 
@@ -715,6 +804,7 @@ export class Soldier implements Target {
     if (this.disarmed) return;
     this.disarmed = true;
     this.sword.visible = false;
+    this.steel.live = false;
     dropSword(this.scene, this.physics, this.sword, a.copy(s.direction).multiplyScalar(2.5).setY(1.2));
     this.garrison.later(0.5, () => this.garrison.voice?.fall(this.position, 'sword/drop', 0.9));
     this.yield();
@@ -722,9 +812,46 @@ export class Soldier implements Target {
 
   /** He has had enough. */
   private yield(): void {
-    this.state = 'broken';
-    this.phase = 'ready';
+    if (this.state !== 'down') this.state = 'broken';
+    this.act = 'guard';
     this.bleed = Math.max(this.bleed, 3.5);
+  }
+
+  /** Goes down, alive: the world has him until he can get his feet under him again. */
+  private floor(direction: THREE.Vector3, force: number): void {
+    const ragdoll = new Ragdoll(this.physics, this.rig, a.copy(this.velocity).add(this.knock));
+    ragdoll.push('chest', a.copy(direction).multiplyScalar(22 + 18 * force).setY(-10));
+    ragdoll.push(Math.random() < 0.5 ? 'thigh_l' : 'thigh_r', a.copy(direction).multiplyScalar(-20));
+    ragdoll.onThud = (point, strength) => this.garrison.voice?.fall(point, 'body/fall', 0.5 + 0.5 * strength);
+    this.floored = ragdoll;
+    this.flooredFor = rand(1.7, 3.1) + this.limp;
+    this.state = 'down';
+    this.act = 'guard';
+    this.reel = 0;
+    this.collider.setEnabled(false);
+    if (this.shield) {
+      const arm = this.rig.bones.lowerarm_l;
+      arm.updateWorldMatrix(true, false);
+      this.shield.updateMatrixWorld(true);
+      this.strapped.copy(arm.matrixWorld).invert().multiply(this.shield.matrixWorld);
+    }
+  }
+
+  /** Gets up from where he fell. */
+  private rise(): void {
+    const ragdoll = this.floored!;
+    this.lying = this.rig.capture();
+    this.rig.worldPosition('pelvis', a);
+    ragdoll.dispose();
+    this.floored = null;
+    this.rising = 1;
+    this.state = this.disarmed || this.vitality < 30 ? 'broken' : 'fight';
+    this.stagger = 1.1;
+    this.attackIn = rand(1, 2);
+    this.collider.setEnabled(true);
+    this.velocity.set(0, 0, 0);
+    this.knock.set(0, 0, 0);
+    this.place(a, this.bearing);
   }
 
   /** Bleeding, tiring, and going down when there is nothing left. */
@@ -733,6 +860,7 @@ export class Soldier implements Target {
       this.vitality -= this.bleed * dt;
       // Wounds clot, slowly, if they are not too bad.
       this.bleed = Math.max(this.vitality < 35 ? 1.2 : 0, this.bleed - dt * 0.12);
+      this.gore.spread(dt, 0.004 + this.bleed * 0.0025);
       for (const w of this.wounds) {
         w.drip -= dt * w.rate;
         if (w.drip <= 0) {
@@ -740,20 +868,28 @@ export class Soldier implements Target {
           this.rig.worldPosition(w.bone, a);
           this.effects.drip(a);
         }
+        // A deep wound throws blood in time with the heart for a while.
+        if (w.pulse > 0) {
+          const before = Math.floor(w.pulse * 2.4);
+          w.pulse -= dt;
+          if (Math.floor(w.pulse * 2.4) !== before) {
+            this.rig.worldPosition(w.bone, a);
+            this.effects.blood(a, b.copy(w.out).setY(w.out.y + 0.3), Math.round(3 + w.pulse * 1.2), 0.5 + w.pulse * 0.06);
+          }
+        }
       }
       if (this.vitality <= 0) this.die(null, 'torso', 0.4);
     }
-    const resting = this.phase === 'ready' && this.guard < 0.3;
-    if (resting) this.stamina = Math.min(1, this.stamina + dt / 16);
+    if (this.act === 'guard' && this.guard < 0.3) this.stamina = Math.min(1, this.stamina + dt / 16);
   }
 
   private die(s: Strike | null, part: string, force: number): void {
     if (this.dead) return;
     const g = this.garrison;
+    const was = this.state;
     this.state = 'dead';
     this.aware = false;
     const w = this.physics.world;
-    this.ward.dispose();
     for (const v of this.volumes) {
       this.physics.owners.delete(v.collider.handle);
       w.removeCollider(v.collider, false);
@@ -762,21 +898,24 @@ export class Soldier implements Target {
     w.removeCharacterController(this.controller);
     w.removeRigidBody(this.body);
 
-    const ragdoll = new Ragdoll(this.physics, this.rig, a.copy(this.velocity).add(this.knock));
+    const ragdoll = this.floored ?? new Ragdoll(this.physics, this.rig, a.copy(this.velocity).add(this.knock));
+    this.floored = null;
     if (s) {
       // The blow that killed him carries the part it landed on, and the rest follows.
       ragdoll.push(LIMB[part] ?? 'chest', a.copy(s.direction).multiplyScalar(22 + 26 * force), s.hit.point);
       ragdoll.push('chest', a.copy(s.direction).multiplyScalar(12 * force).setY(-14));
-    } else ragdoll.push('chest', a.set(-Math.sin(this.yaw), -0.4, -Math.cos(this.yaw)).multiplyScalar(22));
+    } else if (was !== 'down') ragdoll.push('chest', a.set(-Math.sin(this.yaw), -0.4, -Math.cos(this.yaw)).multiplyScalar(22));
     const fallen = new Fallen(this.rig, ragdoll);
     if (this.shield) fallen.carry(this.shield, 'lowerarm_l');
+    this.board?.dispose();
     if (!this.disarmed) {
       dropSword(this.scene, this.physics, this.sword, a.copy(this.velocity).setY(0.5));
       g.later(0.55, () => g.voice?.fall(this.position, 'sword/drop', 0.8));
     }
+    this.steel.dispose();
     this.sword.removeFromParent();
     ragdoll.onThud = (point, strength) => g.voice?.fall(point, 'body/fall', 0.5 + 0.5 * strength);
-    g.bury(fallen, WOUND[part] ?? 'spine_03', s ? 1 : 0.6);
+    g.bury(fallen, BONE[part] ?? 'spine_03', s ? 1 : 0.6);
     // Not every man dies quietly, and some take a while over it.
     const quick = part === 'head' || force > 1.6;
     if (!quick || Math.random() < 0.5) g.voice?.at('voice/death', this.mouth(b), 1);
@@ -788,6 +927,14 @@ export class Soldier implements Target {
   /** Once per physics step. */
   fixedStep(dt: number): void {
     if (this.dead) return;
+    if (!this.disarmed) this.steel.step(dt);
+    if (this.board && this.shield) this.board.follow(this.shield);
+    if (this.state === 'down') {
+      this.suffer(dt);
+      this.flooredFor -= dt;
+      if (!this.dead && this.flooredFor <= 0) this.rise();
+      return;
+    }
     const p = this.curr;
     this.prev.copy(p);
     this.think(dt);
@@ -823,11 +970,33 @@ export class Soldier implements Target {
   /** Per frame: stands the figure where the capsule is and puts the weapons in its hands. */
   update(dt: number, alpha: number): void {
     if (this.dead) return;
+    if (this.floored) {
+      // On the ground: the bones are the world's, and the sword goes where the hand does.
+      this.floored.update(dt);
+      this.rig.worldPosition('pelvis', this.position);
+      this.rig.worldPosition('hand_r', a);
+      this.rig.worldQuaternion('hand_r', q);
+      this.steel.linAcc = 30;
+      this.steel.angAcc = 30;
+      this.steel.maxSpeed = 5;
+      this.steel.maxSpin = 8;
+      this.steel.power = 1;
+      this.steel.aim(a.add(b.set(0, 0.08, 0).applyQuaternion(q)), this.sword.quaternion);
+      if (!this.disarmed) this.steel.frame(alpha);
+      if (this.shield) {
+        const arm = this.rig.bones.lowerarm_l;
+        arm.updateWorldMatrix(true, false);
+        m4.multiplyMatrices(arm.matrixWorld, this.strapped).decompose(this.shield.position, this.shield.quaternion, unit);
+      }
+      this.blood.value = this.bloody;
+      this.track();
+      return;
+    }
     this.position.lerpVectors(this.prev, this.curr, alpha);
-    this.settle(dt);
+    this.settle(dt, alpha);
   }
 
-  private settle(dt: number): void {
+  private settle(dt: number, alpha = 1): void {
     const fig = this.figure;
     const fighting = this.state === 'fight' || this.state === 'alert' || (this.state === 'chase' && this.dist < 7);
     this.stance = approach(this.stance, fighting ? 1 : 0, 4, dt);
@@ -835,40 +1004,48 @@ export class Soldier implements Target {
     const run = Math.min(1, speed / 4.5);
     const fp = this.flinchPitch.step(dt), fy = this.flinchYaw.step(dt), fr = this.flinchRoll.step(dt);
     const hurt = 1 - this.vitality / 100;
-    // The trunk goes back with the wind-up and through with the stroke, as the wearer's does.
-    const u = Math.min(1, this.t / this.duration);
-    const side = Math.sign(this.travel.x) || 1;
-    const twist = this.thrusting ? 0 : this.phase === 'windup' ? side * 0.12 * ease(u) : this.phase === 'strike' ? side * (0.12 - 0.3 * ease(u)) : 0;
+    // The trunk goes with the hand, as the wearer's does.
+    const twist = this.thrusting && this.act !== 'guard' ? 0.06 * (this.reach + 1) : -this.o.x * 0.26;
     // On guard he sits into his legs and leans in; hurt, he folds over it.
     const lean = -0.03 - 0.05 * this.stance - 0.06 * run - 0.12 * hurt * hurt - (this.stagger > 0 ? 0.08 : 0) + (this.daze > 0 ? Math.sin(this.daze * 9) * 0.04 : 0);
     const dy = this.player.position.y - this.position.y;
-    this.aimPitch = approach(this.aimPitch, this.aware ? THREE.MathUtils.clamp(Math.atan2(dy, Math.max(1, this.dist)), -0.5, 0.5) : 0, 6, dt);
-    this.chest.setFromEuler(this.e.set(lean + fp * 0.06, this.yaw + twist + fy * 0.06, fr * 0.06));
+    this.aimPitch = approach(this.aimPitch, this.aware ? THREE.MathUtils.clamp(Math.atan2(dy, Math.max(1, this.dist)), -0.5, 0.5) + (this.striking ? this.zone : 0) : 0, 6, dt);
+    this.chest.setFromEuler(this.e.set(lean + fp * 0.06, this.yaw + twist + fy * 0.06, fr * 0.06 - this.o.x * 0.05));
     const fx = -Math.sin(this.yaw), fz = -Math.cos(this.yaw);
     this.eye.set(this.position.x + fx * 0.13, this.position.y + CHEST - 0.05 * this.stance - 0.05 * hurt + fig.gait.sway.y, this.position.z + fz * 0.13);
     this.eye.y -= fig.stand(dt, this.eye, this.chest, this.position, this.yaw, this.velocity, this.grounded, undefined, this.stance * 0.2);
 
-    this.frame.setFromEuler(this.e.set(this.aimPitch * 0.9, this.yaw + twist * 0.5, 0));
+    this.frame.setFromEuler(this.e.set(this.aimPitch * 0.9, this.yaw + twist * 0.4, 0));
     this.wield(dt);
-    this.toWorld(this.pose, this.sword.position, this.sword.quaternion, 'sword');
+    // Where the sword is asked to be; where it is, is the steel's business.
+    this.toWorld(this.pose, a, q, 'sword');
+    this.steel.aim(a, q);
+    if (!this.disarmed && dt > 0) {
+      this.steel.frame(alpha);
+      fig.limit('sword', this.sword.position, this.sword.quaternion);
+    }
+    this.blood.value = this.bloody;
     if (this.shield) {
       const g = this.shieldDead ? 0 : ease(this.guard);
-      boardPose(g, 0, this.stagger > 0.3 ? 1 : 0, this.target);
+      boardPose(g, 0, this.stagger > 0.3 ? 1 : 0, this.target, -this.threat.x);
       const r = 1 - Math.exp(-dt * 14);
-      this.board.g.lerp(this.target.g, dt > 0 ? r : 1);
-      this.board.q.slerp(this.target.q, dt > 0 ? r : 1);
-      this.toWorld(this.board, this.shield.position, this.shield.quaternion, 'shield');
+      this.boardAt.g.lerp(this.target.g, dt > 0 ? r : 1);
+      this.boardAt.q.slerp(this.target.q, dt > 0 ? r : 1);
+      this.toWorld(this.boardAt, this.shield.position, this.shield.quaternion, 'shield');
     }
     fig.wield(this.disarmed ? null : this.sword, this.shield, this.chest);
     if (this.disarmed) fig.hang('r', this.chest, 0);
-    if (!this.shield) fig.hang('l', this.chest, Math.sin(this.t * 3) * 0.1 * run);
+    if (!this.shield) fig.hang('l', this.chest, Math.sin(this.clock * 3) * 0.1 * run);
     // He looks at what he is fighting.
     if (this.aware && this.stagger <= 0) {
       const look = THREE.MathUtils.clamp(wrap(this.bearing - this.yaw), -0.9, 0.9);
       this.rig.rotateWorld('head', q.setFromAxisAngle(UP, look * 0.8));
     }
-
-    this.ward.update(this.sword, this.shield, !this.disarmed && (this.phase === 'strike' || (!this.shield && this.guard > 0.55)), !!this.shield && !this.shieldDead && this.guard > 0.5);
+    // Getting up: out of the heap he was lying in and into his stance.
+    if (this.rising > 0 && this.lying) {
+      this.rising = Math.max(0, this.rising - dt / 0.95);
+      this.rig.blend(this.lying, ease(this.rising));
+    }
     this.track();
   }
 
@@ -891,8 +1068,6 @@ export class Soldier implements Target {
     }
   }
 }
-
-const WOOD = new THREE.Color(0.36, 0.26, 0.17);
 
 interface Grave {
   fallen: Fallen;
@@ -960,7 +1135,7 @@ export class Garrison {
         shield.scale.setScalar(0.8);
         shield.rotation.y = Math.PI;
       }
-      g.soldiers.push(new Soldier(g, scene, physics, level, player, arms, effects, rig, sword, shield, level.enemySpawns[i], k.skill, k.nerve));
+      g.soldiers.push(new Soldier(g, scene, physics, level, player, arms, effects, rig, sword, shield, level.enemySpawns[i], i + 1, k.skill, k.nerve));
     }
     return g;
   }
@@ -975,6 +1150,16 @@ export class Garrison {
     const d = s.position.distanceToSquared(this.player.position);
     for (const o of this.soldiers) if (o !== s && !o.dead && o.state === 'fight' && o.position.distanceToSquared(this.player.position) < d) ahead++;
     return ahead;
+  }
+
+  /** Turns a soldier's step away from the men beside him. */
+  spread(s: Soldier, want: THREE.Vector2): void {
+    for (const o of this.soldiers) {
+      if (o === s || o.dead || o.state === 'down') continue;
+      const dx = s.position.x - o.position.x, dz = s.position.z - o.position.z;
+      const d = Math.hypot(dx, dz);
+      if (d < 1.7 && d > 0.01) want.x += (dx / d) * (1.7 - d) * 1.6, (want.y += (dz / d) * (1.7 - d) * 1.6);
+    }
   }
 
   /** Two men do not swing at the same instant; they would hit each other. */

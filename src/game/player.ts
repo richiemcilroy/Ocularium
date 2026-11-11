@@ -122,6 +122,8 @@ export class Player {
   speed = 0;
   /** 0..1 how much something in the hands is slowing the feet (a blow being held back, a raised shield). */
   encumbered = 0;
+  /** 0..1 how much of the mouse the sword hand has taken from the business of turning. */
+  grip = 0;
   /** Where in a breath the wearer is, 0..1; the chest rises until `INHALE` and falls after. */
   breathPhase = 0;
   /** True on the frame a breath starts to go out. */
@@ -234,6 +236,7 @@ export class Player {
     this.winded = false;
     this.stun = 0;
     this.encumbered = 0;
+    this.grip = 0;
     this.restTimer = 0;
     this.breathPhase = 0;
     this.twist.set(0, 0, 0);
@@ -297,6 +300,7 @@ export class Player {
 
   /** Spends some of what the wearer has left. */
   tire(amount: number): void {
+    if (amount <= 0) return;
     this.stamina = Math.max(0, this.stamina - amount);
     this.exertion = Math.min(1, this.exertion + amount * 0.3);
     this.restTimer = Math.max(this.restTimer, 1.0);
@@ -333,8 +337,10 @@ export class Player {
     const look = input.consumeLook();
     this.look.x = look.x;
     this.look.y = look.y;
-    this.aimYaw -= look.x;
-    this.aimPitch = THREE.MathUtils.clamp(this.aimPitch - look.y, -1.2, 1.2);
+    // With the sword hand on the mouse the body still turns, but only a little.
+    const turn = 1 - 0.74 * this.grip;
+    this.aimYaw -= look.x * turn;
+    this.aimPitch = THREE.MathUtils.clamp(this.aimPitch - look.y * turn, -1.2, 1.2);
 
     // The hands lead; the chest turns once they have gone far enough, then settles behind them.
     const dzYaw = 0.11, dzPitch = 0.085;

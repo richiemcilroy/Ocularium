@@ -11,6 +11,10 @@ npm run dev
 
 Open http://localhost:5199 in a recent Chrome or Edge and click to begin.
 
+The sword is a weight on the end of an arm. There are no stored strokes: how hard a blow lands depends on how
+fast the blade is really going, where along it the contact is, and whether the edge is leading. Blades and
+shields stop each other by being in the way. Running, striking and taking blows all cost wind.
+
 ## Controls
 
 | Input | Action |
@@ -21,9 +25,12 @@ Open http://localhost:5199 in a recent Chrome or Edge and click to begin.
 | Space | Jump |
 | Q / E | Lean |
 | Mouse | Aim |
-| Left button | Cut |
+| Hold left button | The mouse moves the sword hand |
+| Draw it back and let go | Cut; the longer it is held, the harder |
+| Drag it across | Cut by hand |
+| Click left button | Quick cut |
 | Right button | Raise shield |
-| F | Thrust |
+| F (hold to wind up) | Thrust |
 | Esc | Pause |
 
 ## Credits

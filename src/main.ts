@@ -86,6 +86,8 @@ async function boot(): Promise<void> {
 
   const stats = new FrameStats();
   const motion = new THREE.Vector3();
+  const face = new THREE.Vector3();
+  const toFace = new THREE.Vector3();
   const focus = new THREE.Vector3();
   const euler = new THREE.Euler(0, 0, 0, 'YXZ').setFromQuaternion(camera.quaternion);
   let last = performance.now();
@@ -112,6 +114,7 @@ async function boot(): Promise<void> {
   const audio = physics ? new Audio(physics) : null;
   const sound = audio && level && player ? new Soundscape(audio, level, player, arms) : null;
   if (garrison) garrison.voice = sound;
+  if (arms) arms.voice = sound;
   // The library streams in behind the level; nothing waits on it.
   audio?.load();
 
@@ -173,10 +176,11 @@ async function boot(): Promise<void> {
     veil.classList.add('hidden');
     if (player) stamp.style.display = 'block';
     if (params.has('intro')) begin();
+    else arms?.ready();
   } else {
     prompt.textContent = 'CLICK TO BEGIN';
     $('keys').textContent =
-      'W A S D  MOVE              SHIFT  RUN\nC  CROUCH                 SPACE  JUMP\nQ / E  LEAN               MOUSE  AIM\nLEFT BUTTON  CUT          F  THRUST\nHOLD EITHER  STRIKE HARDER\nRIGHT BUTTON  SHIELD      ESC  PAUSE';
+      'W A S D  MOVE                  SHIFT  RUN\nC  CROUCH                     SPACE  JUMP\nQ / E  LEAN                   MOUSE  AIM\nHOLD LEFT BUTTON  THE MOUSE MOVES THE SWORD\nDRAW IT BACK AND LET GO, OR DRAG IT ACROSS\nF  THRUST                     RIGHT BUTTON  SHIELD';
     veil.addEventListener('click', () => input.requestLock());
     input.onLockChange = (locked) => {
       running = locked;
@@ -203,6 +207,7 @@ async function boot(): Promise<void> {
         player.control(input, dt, !!arms?.covering);
         physics.update(dt, () => {
           player.fixedStep(physics.step);
+          arms?.fixedStep(physics.step);
           garrison?.fixedStep(physics.step);
         });
         player.frame(dt);
@@ -248,6 +253,29 @@ async function boot(): Promise<void> {
         else focus.copy(s.position);
         camera.position.copy(watching).applyAxisAngle(camera.up, s.yaw).add(focus);
         camera.lookAt(focus.x, focus.y + (s.dead ? 0.3 : 1.05), focus.z);
+      }
+      // Everyone the camera can see has their face covered, the living and the dead.
+      bodycam.clearFaces();
+      if (physics && params.get('faces') !== '0') {
+        camera.updateMatrixWorld();
+        const tan = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+        const cover = (rig: { bones: Record<string, THREE.Bone> }) => {
+          const bone = rig.bones.head;
+          if (!bone) return;
+          bone.updateWorldMatrix(true, false);
+          // The middle of the face is a hand's breadth up the bone the skull sits on.
+          face.set(0, 0.1, 0).applyMatrix4(bone.matrixWorld);
+          toFace.subVectors(face, camera.position);
+          const far = toFace.length();
+          if (far < 0.3 || far > 40) return;
+          if (physics.raycast(camera.position, toFace.divideScalar(far), far - 0.3, 1)) return;
+          face.applyMatrix4(camera.matrixWorldInverse);
+          if (face.z > -0.2) return;
+          const d = -face.z;
+          bodycam.coverFace(0.5 + face.x / d / (2 * tan * camera.aspect), 0.5 - face.y / d / (2 * tan), Math.min(0.4, (0.5 * 0.155) / d / tan));
+        };
+        if (garrison) for (const s of garrison.soldiers) cover(s.rig);
+        if (body) for (const f of body.fallen) if (!(player.dead && f === body.fallen[body.fallen.length - 1])) cover(f.rig);
       }
       motion.copy(running ? player.spin : motion.set(0, 0, 0));
     } else {

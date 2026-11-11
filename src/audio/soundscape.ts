@@ -75,12 +75,10 @@ export class Soundscape {
         audio.play('gear', { volume: 0.22 + 0.15 * charge, wet: 0.3 });
         if (charge > 0.5 || player.stamina < 0.45 || Math.random() < 0.25) audio.play('voice/effort', { volume: 0.3 + 0.3 * Math.max(charge, 1 - player.stamina), wet: 0.3, delay: 0.05 });
       };
-      arms.events.impact = (surface, point, energy) => this.blade(surface, point, energy);
       arms.events.guard = (raised) => {
         audio.play(audio.first('gear/shield', 'gear') ?? 'gear', { volume: raised ? 0.35 : 0.22, pan: -0.25, wet: 0.3 });
       };
       arms.events.draw = () => audio.play('gear/draw', { volume: 0.7, pan: 0.2, wet: 0.3 });
-      arms.events.blocked = (point, energy, on) => (on === 'shield' ? this.shield(point, energy) : this.clash(point, energy));
     }
   }
 

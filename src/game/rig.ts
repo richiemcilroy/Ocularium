@@ -525,6 +525,24 @@ export class Rig {
     }
   }
 
+  /** The figure exactly as it is now: every bone's turn, and where the whole stands. */
+  capture(): { turns: THREE.Quaternion[]; position: THREE.Vector3; quaternion: THREE.Quaternion } {
+    return { turns: this.all.map((bone) => bone.quaternion.clone()), position: this.root.position.clone(), quaternion: this.root.quaternion.clone() };
+  }
+
+  /** Mixes a captured pose into the present one: `weight` 1 is all the captured pose, 0 none of it. */
+  blend(from: { turns: THREE.Quaternion[]; position: THREE.Vector3; quaternion: THREE.Quaternion }, weight: number): void {
+    if (weight <= 0) return;
+    for (let i = 0; i < this.all.length; i++) this.all[i].quaternion.slerp(from.turns[i], weight);
+    this.root.position.lerp(from.position, weight);
+    this.root.quaternion.slerp(from.quaternion, weight);
+  }
+
+  private get all(): THREE.Bone[] {
+    return (this.list ??= Object.values(this.bones));
+  }
+  private list: THREE.Bone[] | null = null;
+
   dispose(): void {
     this.root.removeFromParent();
   }

@@ -2,7 +2,7 @@ import * as THREE from 'three/webgpu';
 import { ao } from 'three/addons/tsl/display/GTAONode.js';
 import { T } from './tsl';
 
-const { Fn, clamp, dot, exp, float, floor, fract, length, log2, max, mix, mrt, mx_noise_float, normalView, output, pass, sRGBTransferOETF, sin, smoothstep, step, tan, uniform, uv, vec2, vec3, vec4 } = T;
+const { Fn, clamp, dot, exp, float, floor, fract, length, log2, max, mix, mrt, mx_noise_float, normalView, output, pass, sRGBTransferOETF, sin, smoothstep, step, tan, uniform, uniformArray, uv, vec2, vec3, vec4 } = T;
 
 type Node = any;
 
@@ -17,6 +17,8 @@ export interface BodycamOptions {
 }
 
 const BLUR_TAPS = 5;
+/** How many faces can be covered at once. */
+const FACES = 8;
 
 /**
  * Renders the scene the way a chest-worn camera records it: a wide fisheye
@@ -66,6 +68,11 @@ export class BodycamPipeline {
   /** 0..1 lines of the picture torn sideways, and blocks of it replaced with the wrong part of the frame. */
   readonly tear = uniform(0);
   readonly mosaic = uniform(0);
+
+  /** Faces in the picture: where each is in the frame as rendered (x, y), and how big (z, as a share of its height). */
+  private faceList = Array.from({ length: FACES }, () => new THREE.Vector4(0, 0, 0, 0));
+  private faces = uniformArray(this.faceList);
+  private faceCount = 0;
 
   private feed: 'on' | 'booting' | 'cutting' | 'off' = 'on';
   private feedTime = 0;
@@ -142,9 +149,20 @@ export class BodycamPipeline {
       const rs = tan(theta).div(this.tanPhi);
       const edge = r.mul(r);
       const toUv = (radius: Node) => dir.mul(radius).div(vec2(this.aspect.mul(2), 2)).add(0.5);
-      const uvR = toUv(rs.mul(float(1).add(this.chroma.mul(edge))));
-      const uvG = toUv(rs);
-      const uvB = toUv(rs.mul(float(1).sub(this.chroma.mul(edge))));
+      const plainG = toUv(rs);
+      // Faces are covered before the footage goes anywhere: each is broken into blocks too coarse to know anyone by.
+      let cover: Node = vec2(0);
+      const wide = vec2(this.aspect, 1);
+      for (let i = 0; i < FACES; i++) {
+        const f = this.faces.element(i);
+        const d = plainG.sub(f.xy).mul(wide);
+        const cell = max(f.z.mul(0.34), 1e-5);
+        const block = floor(d.div(cell).add(0.5)).mul(cell);
+        cover = cover.add(block.sub(d).div(wide).mul(step(length(d), f.z)));
+      }
+      const uvR = toUv(rs.mul(float(1).add(this.chroma.mul(edge)))).add(cover);
+      const uvG = plainG.add(cover);
+      const uvB = toUv(rs.mul(float(1).sub(this.chroma.mul(edge)))).add(cover);
 
       // Shutter blur: translation from yaw/pitch plus rotation about the optical axis from roll.
       const rollVec = vec2(uvG.y.sub(0.5).negate().div(this.aspect), uvG.x.sub(0.5).mul(this.aspect)).mul(this.blur.z);
@@ -283,6 +301,18 @@ export class BodycamPipeline {
 
     this.pipeline.render();
     this.updateExposure(dt);
+  }
+
+  /** Forgets last frame's faces. */
+  clearFaces(): void {
+    for (let i = 0; i < this.faceCount; i++) this.faceList[i].set(0, 0, 0, 0);
+    this.faceCount = 0;
+  }
+
+  /** Covers a face: its centre in the rendered frame (0..1 across and up) and its radius as a share of the frame's height. */
+  coverFace(x: number, y: number, radius: number): void {
+    if (this.faceCount >= FACES) return;
+    this.faceList[this.faceCount++].set(x, y, radius, 1);
   }
 
   /** True while there is a picture. */

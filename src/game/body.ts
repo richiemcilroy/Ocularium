@@ -6,7 +6,8 @@ import { Gait } from './gait';
 import { Follow, type Player } from './player';
 import { Fallen, Ragdoll } from './ragdoll';
 import { Rig, type Grasp, type Handle, type Side } from './rig';
-import { SHIELD, SWORD, type Arms } from './weapon';
+import { SWORD } from './steel';
+import { SHIELD, type Arms } from './weapon';
 
 /** Where the camera sits on the figure at rest: on the breastbone, clear of the cloth. */
 const MOUNT = new THREE.Vector3(0, 1.4, -0.19);

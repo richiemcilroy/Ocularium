@@ -10,7 +10,7 @@
     s.struck = (strike, part) => {
       const was = s.dead;
       const r = struck(strike, part);
-      log.blows.push(`${part}:${r}:${Math.round(s.vitality)}:v${strike.speed.toFixed(0)}p${strike.power.toFixed(1)}`);
+      log.blows.push(`${part}:${r}:${Math.round(s.vitality)}:v${strike.speed.toFixed(0)}e${strike.edge.toFixed(1)}${strike.thrust ? "T" : ""}p${strike.power.toFixed(1)}`);
       if (!was && s.dead) log.kills++;
       return r;
     };
