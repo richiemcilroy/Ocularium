@@ -2,7 +2,7 @@ import * as THREE from 'three/webgpu';
 import { ao } from 'three/addons/tsl/display/GTAONode.js';
 import { T } from './tsl';
 
-const { Fn, clamp, dot, exp, float, floor, fract, length, log2, max, mix, mrt, normalView, output, pass, sRGBTransferOETF, sin, smoothstep, tan, uniform, uv, vec2, vec3, vec4 } = T;
+const { Fn, clamp, dot, exp, float, floor, fract, length, log2, max, mix, mrt, mx_noise_float, normalView, output, pass, sRGBTransferOETF, sin, smoothstep, step, tan, uniform, uniformArray, uv, vec2, vec3, vec4 } = T;
 
 type Node = any;
 
@@ -17,12 +17,17 @@ export interface BodycamOptions {
 }
 
 const BLUR_TAPS = 5;
+/** How many faces can be covered at once. */
+const FACES = 8;
 
 /**
  * Renders the scene the way a chest-worn camera records it: a wide fisheye
  * projection with lateral chromatic aberration, shutter motion blur, a small
  * sensor's noise that rises with gain, slow auto exposure, a hard-clipping
- * tone curve and block compression in the shadows.
+ * tone curve and block compression in the shadows. The sensor is read a line
+ * at a time, so a fast turn leans the picture and a knock makes it wobble; the
+ * edges are sharpened in the camera; and the feed itself can be switched on,
+ * knocked about and lost.
  *
  * The scene itself is rendered rectilinear and wider than the final image; the
  * lens pass resamples it into the fisheye projection.
@@ -52,6 +57,27 @@ export class BodycamPipeline {
   /** 0..1 damage flash / blackout used when the wearer is hit. */
   readonly blackout = uniform(0);
   readonly aoStrength = uniform(1);
+  /** How far the picture leans (x) and stretches (y) because the sensor is read from the top down while the camera turns. */
+  readonly shear = uniform(new THREE.Vector2());
+  /** In-camera edge sharpening. */
+  readonly sharpen = uniform(0.55);
+  /** 0..1 blood on the lens. */
+  readonly gore = uniform(0);
+  /** 0 no picture .. 1 picture. */
+  readonly power = uniform(1);
+  /** 0..1 lines of the picture torn sideways, and blocks of it replaced with the wrong part of the frame. */
+  readonly tear = uniform(0);
+  readonly mosaic = uniform(0);
+
+  /** Faces in the picture: where each is in the frame as rendered (x, y), and how big (z, as a share of its height). */
+  private faceList = Array.from({ length: FACES }, () => new THREE.Vector4(0, 0, 0, 0));
+  private faces = uniformArray(this.faceList);
+  private faceCount = 0;
+
+  private feed: 'on' | 'booting' | 'cutting' | 'off' = 'on';
+  private feedTime = 0;
+  private knocked = 0;
+  private boost = 0;
 
   // Auto exposure state
   private meterTarget: THREE.RenderTarget;
@@ -103,7 +129,18 @@ export class BodycamPipeline {
     const rand = Fn(([p]: [Node]) => fract(sin(dot(p, vec2(12.9898, 78.233))).mul(43758.5453)));
 
     const lens = Fn(() => {
-      const centered = uv().sub(0.5).mul(vec2(this.aspect.mul(2), 2));
+      // A feed in trouble: bands of lines slip sideways, and blocks show some other part of the frame.
+      const line = floor(uv().y.mul(this.resolution.y).div(6));
+      const slip = rand(vec2(line, this.frameSeed.mul(0.61)));
+      const torn = step(float(1).sub(this.tear.mul(0.55)), slip).mul(this.tear);
+      const cell = floor(uv().mul(this.resolution).div(48));
+      const lost = step(float(1).sub(this.mosaic.mul(0.7)), rand(cell.add(this.frameSeed.mul(0.13))));
+      const elsewhere = cell.add(0.5).mul(48).div(this.resolution).add(vec2(rand(cell.add(3.1)).sub(0.5), rand(cell.add(7.7)).sub(0.5)).mul(0.5));
+      const frame = mix(uv().add(vec2(rand(vec2(line, this.frameSeed)).sub(0.5).mul(0.22).mul(torn), 0)), elsewhere, lost);
+
+      const flat = frame.sub(0.5).mul(vec2(this.aspect.mul(2), 2));
+      // Rolling shutter: the bottom of the picture is read later than the top, by which time the camera has turned.
+      const centered = vec2(flat.x.add(this.shear.x.mul(flat.y)), flat.y.mul(float(1).add(this.shear.y.mul(flat.y))));
       const r = length(centered);
       const dir = centered.div(max(r, 1e-5));
 
@@ -112,9 +149,20 @@ export class BodycamPipeline {
       const rs = tan(theta).div(this.tanPhi);
       const edge = r.mul(r);
       const toUv = (radius: Node) => dir.mul(radius).div(vec2(this.aspect.mul(2), 2)).add(0.5);
-      const uvR = toUv(rs.mul(float(1).add(this.chroma.mul(edge))));
-      const uvG = toUv(rs);
-      const uvB = toUv(rs.mul(float(1).sub(this.chroma.mul(edge))));
+      const plainG = toUv(rs);
+      // Faces are covered before the footage goes anywhere: each is broken into blocks too coarse to know anyone by.
+      let cover: Node = vec2(0);
+      const wide = vec2(this.aspect, 1);
+      for (let i = 0; i < FACES; i++) {
+        const f = this.faces.element(i);
+        const d = plainG.sub(f.xy).mul(wide);
+        const cell = max(f.z.mul(0.34), 1e-5);
+        const block = floor(d.div(cell).add(0.5)).mul(cell);
+        cover = cover.add(block.sub(d).div(wide).mul(step(length(d), f.z)));
+      }
+      const uvR = toUv(rs.mul(float(1).add(this.chroma.mul(edge)))).add(cover);
+      const uvG = plainG.add(cover);
+      const uvB = toUv(rs.mul(float(1).sub(this.chroma.mul(edge)))).add(cover);
 
       // Shutter blur: translation from yaw/pitch plus rotation about the optical axis from roll.
       const rollVec = vec2(uvG.y.sub(0.5).negate().div(this.aspect), uvG.x.sub(0.5).mul(this.aspect)).mul(this.blur.z);
@@ -127,6 +175,13 @@ export class BodycamPipeline {
         acc.addAssign(vec3(shaded(uvR.add(o)).r, shaded(uvG.add(o)).g, shaded(uvB.add(o)).b));
       }
       const color = acc.div(BLUR_TAPS).toVar();
+
+      // The camera sharpens what it records: edges get a bright and a dark line they did not have.
+      const px = vec2(1.3, 1.3).div(this.resolution);
+      const around = shaded(uvG.add(vec2(px.x, 0))).g.add(shaded(uvG.sub(vec2(px.x, 0))).g).add(shaded(uvG.add(vec2(0, px.y))).g).add(shaded(uvG.sub(vec2(0, px.y))).g).mul(0.25);
+      const still = float(1).sub(clamp(length(blurVec).mul(140), 0, 1));
+      color.addAssign(shaded(uvG).g.sub(around).mul(this.sharpen).mul(still));
+      color.assign(max(color, vec3(0)));
 
       // Outside the rendered source there is nothing to record.
       const inside = smoothstep(0.0, 0.004, uvG.x)
@@ -148,18 +203,24 @@ export class BodycamPipeline {
       color.assign(color.mul(vec3(0.985, 1.0, 1.02)));
       color.assign(mix(color, smoothstep(0.0, 1.0, color), 0.35));
 
+      // Blood on the glass: out of focus, so soft-edged, and it takes the light with it.
+      const blot = mx_noise_float(vec3(flat.mul(3.1), 3.3)).mul(0.65).add(mx_noise_float(vec3(flat.mul(9.5), 9.1)).mul(0.35)).mul(0.5).add(0.5);
+      const reach = blot.add(smoothstep(0.5, 2.0, length(flat)).mul(0.08));
+      const wet = smoothstep(float(0.93).sub(this.gore.mul(0.2)), float(0.97).sub(this.gore.mul(0.18)), reach).mul(step(0.01, this.gore));
+      color.assign(mix(color, color.mul(vec3(0.4, 0.03, 0.02)).add(vec3(0.01, 0, 0)), wet.mul(0.88)));
+
       // Block compression: shadows collapse into flat 8px macroblocks.
-      const px = uv().mul(this.resolution);
-      const blockPx = floor(px.div(8));
+      const pix = uv().mul(this.resolution);
+      const blockPx = floor(pix.div(8));
       const blockNoise = rand(blockPx.add(this.frameSeed.mul(0.37)));
       const darkness = float(1).sub(smoothstep(0.02, 0.32, luma));
       const blockShift = blockNoise.sub(0.5).mul(0.035).mul(darkness).mul(this.blockiness);
       color.addAssign(blockShift);
 
       // Sensor noise: fine luma grain plus coarser chroma blotches, both moving every frame.
-      const grainPx = floor(px.div(1.5));
+      const grainPx = floor(pix.div(1.5));
       const n1 = rand(grainPx.add(this.frameSeed)).sub(0.5);
-      const chromaPx = floor(px.div(3));
+      const chromaPx = floor(pix.div(3));
       const n2 = rand(chromaPx.add(this.frameSeed.mul(1.7).add(11.3))).sub(0.5);
       const n3 = rand(chromaPx.add(this.frameSeed.mul(2.3).add(47.1))).sub(0.5);
       const shadowWeight = mix(float(1.35), float(0.45), smoothstep(0.0, 0.8, luma));
@@ -171,6 +232,7 @@ export class BodycamPipeline {
       color.mulAssign(mix(float(1), falloff, this.vignette));
 
       color.mulAssign(float(1).sub(this.blackout));
+      color.mulAssign(this.power);
       return vec4(sRGBTransferOETF(clamp(color, 0, 1)), 1);
     });
 
@@ -232,9 +294,94 @@ export class BodycamPipeline {
     const toUvY = 1 / (2 * tanPhi);
     const toUvX = toUvY / this.aspect.value;
     this.blur.value.set(-motion.y * shutter * toUvX, motion.x * shutter * toUvY, motion.z * shutter);
+    // The sensor takes about a ninetieth of a second to read from top to bottom.
+    const readout = 1 / 90 / (2 * Math.max(this.k.value, 1e-3));
+    this.shear.value.set(THREE.MathUtils.clamp(motion.y * readout, -0.2, 0.2), THREE.MathUtils.clamp(-motion.x * readout, -0.2, 0.2));
+    this.signal(dt);
 
     this.pipeline.render();
     this.updateExposure(dt);
+  }
+
+  /** Forgets last frame's faces. */
+  clearFaces(): void {
+    for (let i = 0; i < this.faceCount; i++) this.faceList[i].set(0, 0, 0, 0);
+    this.faceCount = 0;
+  }
+
+  /** Covers a face: its centre in the rendered frame (0..1 across and up) and its radius as a share of the frame's height. */
+  coverFace(x: number, y: number, radius: number): void {
+    if (this.faceCount >= FACES) return;
+    this.faceList[this.faceCount++].set(x, y, radius, 1);
+  }
+
+  /** True while there is a picture. */
+  get live(): boolean {
+    return this.feed === 'on' || this.feed === 'booting';
+  }
+
+  /** True once a picture that was switched on has come up. */
+  get settled(): boolean {
+    return this.feed === 'on' || (this.feed === 'booting' && this.feedTime > 0.2);
+  }
+
+  /** Whether the feed has gone dark. */
+  get dark(): boolean {
+    return this.feed === 'off';
+  }
+
+  /** Switches the camera on: nothing, then a torn and blown-out picture that settles. */
+  powerOn(): void {
+    this.feed = 'booting';
+    this.feedTime = 0;
+    this.gore.value = 0;
+    this.knocked = 0;
+    // The lens was covered while it metered, so the gain is all the way up.
+    this.exposureLog = this.autoExposureMax - 0.6;
+    this.boost = 1;
+  }
+
+  /** Ends the feed: the picture breaks up and is gone. */
+  cut(): void {
+    if (this.feed === 'off' || this.feed === 'cutting') return;
+    this.feed = 'cutting';
+    this.feedTime = 0;
+  }
+
+  /** Straight to no picture. */
+  off(): void {
+    this.feed = 'off';
+    this.power.value = 0;
+    this.tear.value = this.mosaic.value = 0;
+  }
+
+  /** A blow to the camera: the picture breaks up for a few frames. */
+  knock(strength: number): void {
+    this.knocked = Math.max(this.knocked, Math.min(1, strength));
+  }
+
+  private signal(dt: number): void {
+    this.feedTime += dt;
+    const t = this.feedTime;
+    this.knocked = Math.max(0, this.knocked - dt * 5);
+    this.boost = Math.max(0, this.boost - dt * 1.6);
+    let tear = this.knocked * 0.8, mosaic = this.knocked * 0.35, power = 1;
+    if (this.feed === 'booting') {
+      power = t < 0.14 ? 0 : Math.min(1, (t - 0.14) / 0.05);
+      const settle = Math.max(0, 1 - (t - 0.14) / 0.5);
+      tear = Math.max(tear, settle);
+      mosaic = Math.max(mosaic, settle * settle * 0.8);
+      if (t > 0.9) this.feed = 'on';
+    } else if (this.feed === 'cutting') {
+      const u = Math.min(1, t / 0.32);
+      tear = Math.max(tear, 0.25 + 0.75 * u);
+      mosaic = Math.max(mosaic, u * u);
+      if (t >= 0.32) this.feed = 'off';
+    }
+    if (this.feed === 'off') power = tear = mosaic = 0;
+    this.power.value = power;
+    this.tear.value = tear;
+    this.mosaic.value = mosaic;
   }
 
   private updateExposure(dt: number): void {
@@ -277,7 +424,7 @@ export class BodycamPipeline {
 
     // Gain brings noise with it.
     const gain = THREE.MathUtils.clamp((this.exposureLog - 0.5) / 4, 0, 1);
-    this.noise.value = 0.02 + 0.07 * gain * gain;
+    this.noise.value = 0.02 + 0.07 * gain * gain + 0.1 * this.boost;
   }
 
   /** Current exposure in stops, for debugging. */

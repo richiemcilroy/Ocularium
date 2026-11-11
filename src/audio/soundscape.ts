@@ -33,13 +33,10 @@ export class Soundscape {
   private gusts: Loop | null = null;
   private birds: Loop | null = null;
   private indoors: Loop | null = null;
-  private breath: Loop | null = null;
-  private panting: Loop | null = null;
   private winded = false;
   private fires: { position: THREE.Vector3; loop: Loop | null }[] = [];
   private distant: string[] = [];
   private nextDistant = 6;
-  private nextBreath = 0;
   private gust = 0;
   private time = 0;
   private started = false;
@@ -72,17 +69,36 @@ export class Soundscape {
     };
 
     if (arms) {
-      arms.events.swing = (thrust) => {
-        audio.play('sword/swing', { volume: thrust ? 0.4 : 0.7, rate: thrust ? 1.25 : 1, pan: 0.2, wet: 0.3, delay: thrust ? 0.02 : 0.06 });
-        audio.play('gear', { volume: 0.22, wet: 0.3 });
-        if (player.stamina < 0.45 || Math.random() < 0.3) audio.play('voice/effort', { volume: 0.3 + 0.3 * (1 - player.stamina), wet: 0.3, delay: 0.05 });
-      };
-      arms.events.impact = (surface, point, energy) => {
-        audio.play(BLADE[surface] ?? 'sword/stone', { position: point, volume: 0.45 + 0.55 * Math.min(1, energy) });
+      arms.events.swing = (thrust, charge) => {
+        // A blow with the whole body behind it moves more air, and costs a grunt.
+        audio.play('sword/swing', { volume: (thrust ? 0.4 : 0.7) + 0.25 * charge, rate: (thrust ? 1.25 : 1) - 0.12 * charge, pan: 0.2, wet: 0.3, delay: thrust ? 0.02 : 0.06 });
+        audio.play('gear', { volume: 0.22 + 0.15 * charge, wet: 0.3 });
+        if (charge > 0.5 || player.stamina < 0.45 || Math.random() < 0.25) audio.play('voice/effort', { volume: 0.3 + 0.3 * Math.max(charge, 1 - player.stamina), wet: 0.3, delay: 0.05 });
       };
       arms.events.guard = (raised) => {
         audio.play(audio.first('gear/shield', 'gear') ?? 'gear', { volume: raised ? 0.35 : 0.22, pan: -0.25, wet: 0.3 });
       };
+      arms.events.draw = () => audio.play('gear/draw', { volume: 0.7, pan: 0.2, wet: 0.3 });
+    }
+  }
+
+  /** Steel on whatever it met. */
+  blade(surface: SurfaceKind, point: THREE.Vector3, energy: number): void {
+    this.audio.play(BLADE[surface] ?? 'sword/stone', { position: point, volume: 0.45 + 0.55 * Math.min(1, energy) });
+  }
+
+  /** Somebody else's boot coming down. */
+  step(point: THREE.Vector3, surface: SurfaceKind, loudness: number): void {
+    this.audio.play(FOOT[surface] ?? 'foot/dirt', { position: point, volume: 0.3 + 0.7 * loudness });
+    if (loudness > 0.35) this.audio.play('gear', { position: point, volume: 0.25 * loudness });
+  }
+
+  /** The camera coming on or going dead, and the sound with it. */
+  feed(on: boolean): void {
+    this.audio.feed(on);
+    if (on) {
+      this.audio.beep(2350, 0.07, 0.1, 0.12);
+      this.audio.beep(3100, 0.09, 0.1, 0.24);
     }
   }
 
@@ -125,9 +141,6 @@ export class Soundscape {
     if (birds) this.birds = a.loop(birds, { volume: 0, wet: 0 });
     if (a.has('amb/room_tone')) this.indoors = a.loop('amb/room_tone', { volume: 0, wet: 0 });
     this.distant = a.matching('amb/').filter((k) => k !== wind && k !== birds && !/wind|breeze|birds|forest|base|outdoor|loop/.test(k));
-    const breath = a.first('voice/breath/calm', 'voice/breath/heavy', 'voice/breath/run', 'voice/breath/loop');
-    if (breath) this.breath = a.loop(breath, { volume: 0, wet: 0.1 });
-    if (breath === 'voice/breath/calm' && a.has('voice/breath/heavy')) this.panting = a.loop('voice/breath/heavy', { volume: 0, wet: 0.1 });
     this.started = true;
   }
 
@@ -172,25 +185,17 @@ export class Soundscape {
       }
     }
 
-    // Breath: quiet at rest, ragged after a run. One-shots if the library has no loop.
+    // Breath: one for each time the chest falls, so what is heard is what is seen. Nothing at rest; a quiet
+    // breath once the wearer has been working; a hard one when they are blown.
     const p = this.player;
-    const effort = THREE.MathUtils.clamp(Math.max(p.exertion, 1 - p.stamina * 1.4), 0, 1);
-    if (this.breath) {
-      // Quiet breathing gives way to panting as the wearer tires.
-      const hard = this.panting ? THREE.MathUtils.smoothstep(effort, 0.45, 0.8) : 0;
-      this.breath.setVolume(effort < 0.12 ? 0 : (0.12 + 0.5 * effort) * (1 - hard), 0.5);
-      this.breath.setRate(0.85 + 0.35 * effort);
-      this.panting?.setVolume((0.2 + 0.4 * effort) * hard, 0.5);
-      this.panting?.setRate(0.9 + 0.2 * effort);
-      // Out of wind altogether: one ragged gasp.
-      if (p.stamina < 0.04 && !this.winded && a.has('voice/breath/gasp')) a.play('voice/breath/gasp', { volume: 0.6, wet: 0.1 });
-      this.winded = p.stamina < 0.04 || (this.winded && p.stamina < 0.3);
-    } else {
-      this.nextBreath -= dt;
-      if (this.nextBreath <= 0 && effort > 0.15) {
-        const len = a.play(a.first(effort > 0.6 ? 'voice/breath/heavy' : 'voice/breath/light', 'voice/breath') ?? 'voice/breath', { volume: 0.15 + 0.55 * effort, rate: 0.9 + 0.3 * effort, wet: 0.1 });
-        this.nextBreath = Math.max(len * 0.9, 2.6 - 1.8 * effort);
-      }
+    if (p.exhaled && !p.dead && p.exertion > 0.16) {
+      const e = p.exertion;
+      const hard = THREE.MathUtils.smoothstep(e, 0.45, 0.8);
+      const set = a.slices(Math.random() < hard ? 'voice/breath/heavy' : 'voice/breath/calm');
+      if (set.length) a.playSlice(set[Math.floor(Math.random() * set.length)], { volume: 0.05 + 0.4 * (e - 0.16), rate: 0.94 + 0.12 * e, wet: 0.1 });
     }
+    // Out of wind altogether: one ragged gasp.
+    if (p.winded && !this.winded && a.has('voice/breath/gasp')) a.play('voice/breath/gasp', { volume: 0.5, wet: 0.1 });
+    this.winded = p.winded;
   }
 }

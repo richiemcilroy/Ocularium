@@ -210,7 +210,12 @@ export class Rig {
 
   static async create(assets: Assets, id = 'characters/soldier'): Promise<Rig> {
     const g = await assets.model(id);
-    return new Rig(cloneSkinned(g.scene));
+    return Rig.from(g.scene);
+  }
+
+  /** Another figure from the same model: its own bones, shared meshes and materials. */
+  static from(source: THREE.Object3D): Rig {
+    return new Rig(cloneSkinned(source));
   }
 
   constructor(model: THREE.Object3D) {
@@ -519,6 +524,24 @@ export class Rig {
       q.multiply(q0.setFromAxisAngle(t.local[j], g.thumb[j + 2] * thumb));
     }
   }
+
+  /** The figure exactly as it is now: every bone's turn, and where the whole stands. */
+  capture(): { turns: THREE.Quaternion[]; position: THREE.Vector3; quaternion: THREE.Quaternion } {
+    return { turns: this.all.map((bone) => bone.quaternion.clone()), position: this.root.position.clone(), quaternion: this.root.quaternion.clone() };
+  }
+
+  /** Mixes a captured pose into the present one: `weight` 1 is all the captured pose, 0 none of it. */
+  blend(from: { turns: THREE.Quaternion[]; position: THREE.Vector3; quaternion: THREE.Quaternion }, weight: number): void {
+    if (weight <= 0) return;
+    for (let i = 0; i < this.all.length; i++) this.all[i].quaternion.slerp(from.turns[i], weight);
+    this.root.position.lerp(from.position, weight);
+    this.root.quaternion.slerp(from.quaternion, weight);
+  }
+
+  private get all(): THREE.Bone[] {
+    return (this.list ??= Object.values(this.bones));
+  }
+  private list: THREE.Bone[] | null = null;
 
   dispose(): void {
     this.root.removeFromParent();

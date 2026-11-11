@@ -18,6 +18,16 @@ export const GROUP = {
 };
 export const groups = (membership: number, filter: number) => ((membership & 0xffff) << 16) | (filter & 0xffff);
 
+/**
+ * Each fighter has a bit of their own. A sword carries its owner's bit and is
+ * stopped by everyone else's steel and boards, never by its owner's.
+ */
+export const fighterBit = (index: number) => 1 << (7 + (index % 9));
+export const FIGHTERS = 0xff80;
+
+/** Called when something solid is hit hard: what was hit, how hard (newtons), where, and the direction of the push. */
+export type ImpactHandler = (other: RAPIER.Collider, force: number, point: THREE.Vector3, normal: THREE.Vector3) => void;
+
 const SOLID = GROUP.WORLD | GROUP.PROP;
 
 export interface RayHit {
@@ -43,6 +53,10 @@ export class Physics {
   readonly owners = new Map<number, unknown>();
   readonly step = 1 / 60;
   private accumulator = 0;
+  private events!: RAPIER.EventQueue;
+  private impacts = new Map<number, ImpactHandler>();
+  private at = new THREE.Vector3();
+  private push = new THREE.Vector3();
 
   static async create(): Promise<Physics> {
     await RAPIER.init();
@@ -52,6 +66,45 @@ export class Physics {
   private constructor() {
     this.world = new RAPIER.World({ x: 0, y: -9.81, z: 0 });
     this.world.timestep = this.step;
+    this.events = new RAPIER.EventQueue(true);
+  }
+
+  /** Reports hard knocks on a collider. */
+  onImpact(collider: RAPIER.Collider, handler: ImpactHandler, threshold = 45): void {
+    collider.setActiveEvents(RAPIER.ActiveEvents.CONTACT_FORCE_EVENTS);
+    collider.setContactForceEventThreshold(threshold);
+    this.impacts.set(collider.handle, handler);
+  }
+
+  offImpact(collider: RAPIER.Collider): void {
+    this.impacts.delete(collider.handle);
+  }
+
+  private report(): void {
+    this.events.drainContactForceEvents((ev) => {
+      const h1 = ev.collider1(), h2 = ev.collider2();
+      const f1 = this.impacts.get(h1), f2 = this.impacts.get(h2);
+      if (!f1 && !f2) return;
+      const c1 = this.world.getCollider(h1), c2 = this.world.getCollider(h2);
+      if (!c1 || !c2) return;
+      const force = ev.maxForceMagnitude();
+      const d = ev.maxForceDirection();
+      this.push.set(d.x, d.y, d.z);
+      let found = false;
+      this.world.contactPair(c1, c2, (manifold) => {
+        if (found || manifold.numSolverContacts() === 0) return;
+        const p = manifold.solverContactPoint(0);
+        if (!p) return;
+        this.at.set(p.x, p.y, p.z);
+        found = true;
+      });
+      if (!found) {
+        const t = (f1 ? c1 : c2).translation();
+        this.at.set(t.x, t.y, t.z);
+      }
+      f1?.(c2, force, this.at, this.push);
+      f2?.(c1, force, this.at, this.push);
+    });
   }
 
   surfaceOf(collider: RAPIER.Collider): SurfaceKind {
@@ -152,6 +205,32 @@ export class Physics {
     return prop;
   }
 
+  /** A free rigid body with a collider of the caller's choosing, carrying `object` with it from where it is now. */
+  addLoose(object: THREE.Object3D, collider: RAPIER.ColliderDesc, surface: SurfaceKind, velocity?: THREE.Vector3, spin?: THREE.Vector3): DynamicProp {
+    const body = this.world.createRigidBody(
+      RAPIER.RigidBodyDesc.dynamic()
+        .setTranslation(object.position.x, object.position.y, object.position.z)
+        .setRotation(object.quaternion)
+        .setLinearDamping(0.05)
+        .setAngularDamping(0.5)
+        .setCcdEnabled(true)
+        .setCanSleep(true),
+    );
+    if (velocity) body.setLinvel(velocity, true);
+    if (spin) body.setAngvel(spin, true);
+    this.tag(this.world.createCollider(collider.setFriction(0.7).setRestitution(0.1).setCollisionGroups(groups(GROUP.PROP, GROUP.WORLD | GROUP.PROP | GROUP.RAGDOLL)), body), surface);
+    const prop = { object, body, surface };
+    this.props.push(prop);
+    return prop;
+  }
+
+  /** Takes a free body back out of the world. */
+  removeProp(prop: DynamicProp): void {
+    const i = this.props.indexOf(prop);
+    if (i >= 0) this.props.splice(i, 1);
+    this.world.removeRigidBody(prop.body);
+  }
+
   /** Nearest hit along a ray. `mask` selects collision groups; defaults to solid world and props. */
   raycast(origin: THREE.Vector3, dir: THREE.Vector3, maxDistance: number, mask = SOLID, exclude?: RAPIER.RigidBody, skip?: (collider: RAPIER.Collider) => boolean): RayHit | null {
     this.ray.origin.x = origin.x;
@@ -194,7 +273,8 @@ export class Physics {
     let steps = 0;
     while (this.accumulator >= this.step) {
       onStep?.();
-      this.world.step();
+      this.world.step(this.events);
+      this.report();
       this.accumulator -= this.step;
       steps++;
     }

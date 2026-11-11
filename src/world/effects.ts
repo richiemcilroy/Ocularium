@@ -68,8 +68,8 @@ export class Effects {
     const sf = instancedDynamicBufferAttribute(this.stainFx, 'vec4');
     const p = uv().sub(0.5).mul(2);
     const edge = length(p).add(mx_noise_float(vec3(p.mul(2.3), sf.x)).mul(0.42)).add(mx_noise_float(vec3(p.mul(7), sf.x.add(9))).mul(0.12));
-    sm.colorNode = vec3(0.2, 0.012, 0.01).mul(sf.y);
-    sm.roughnessNode = float(0.22);
+    sm.colorNode = vec3(0.15, 0.009, 0.007).mul(sf.y);
+    sm.roughnessNode = float(0.4);
     sm.metalnessNode = float(0);
     sm.opacityNode = smoothstep(0.78, 0.5, edge).mul(sf.z);
     sm.aoNode = skyVolume.node;
